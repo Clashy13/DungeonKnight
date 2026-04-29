@@ -29,7 +29,11 @@ Scene {
             width: Math.min(parent.width, parent.height * aspectRatio)
             height: width / aspectRatio
 
-            onClicked: (row,column) => playerManager.movePlayerTowards(row,column)
+            onClicked: (row,column) => {
+                if(!playerManager.animationRunning) {
+                    playerManager.movePlayerTowards(row,column);
+                }
+            }
         }
 
         PlayerManager {

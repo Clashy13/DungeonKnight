@@ -6,6 +6,8 @@ EntityManager {
     property variant tilemap
     property variant player
 
+    property bool animationRunning: false
+
     function spawnPlayer() {
         const tileIndex = tilemap.getRandomFreeTilePosition();
 
@@ -26,6 +28,7 @@ EntityManager {
                             Qt.resolvedUrl("Player.qml"),
                             newEntityProperties);
                 player = getLastAddedEntity();
+                player.finishedAnimation.connect(finishAnimation);
             } else {
                 player.row = row;
                 player.column = column;
@@ -34,6 +37,10 @@ EntityManager {
                 player.y = playerPostion.y;
             }
         }
+    }
+
+    function finishAnimation() {
+        animationRunning = false;
     }
 
     function movePlayerTowards(row,column) {
@@ -50,8 +57,8 @@ EntityManager {
             const playerPostion = tilemap.tileIndexToPosition(row,column);
             player.row = row;
             player.column = column;
-            player.x = playerPostion.x;
-            player.y = playerPostion.y;
+            animationRunning = true;
+            player.moveTo(playerPostion.x,playerPostion.y,160);
         }
     }
 }

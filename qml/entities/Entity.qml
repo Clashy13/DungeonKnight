@@ -9,6 +9,9 @@ EntityBase {
     property string imgSrc
     property int imgSize
 
+    property int moveDuration
+    signal finishedAnimation()
+
     Image {
         x: -entity.imgSize/ 2
         y: -entity.imgSize / 3 * 2
@@ -16,5 +19,38 @@ EntityBase {
         height: entity.imgSize
         smooth: false
         source: entity.imgSrc
+    }
+
+    function moveTo(targetX, targetY, speed) {
+        var dx = targetX - x
+        var dy = targetY - y
+        var distance = Math.sqrt(dx*dx + dy*dy)
+
+        moveDuration = distance / speed * 1000
+
+        moveAnim.animations[0].to = targetX
+        moveAnim.animations[1].to = targetY
+
+        moveAnim.start();
+    }
+
+    ParallelAnimation {
+        id: moveAnim
+
+        NumberAnimation {
+            target: entity
+            property: "x"
+            duration: moveDuration
+            easing.type: Easing.Linear
+        }
+
+        NumberAnimation {
+            target: entity
+            property: "y"
+            duration: moveDuration
+            easing.type: Easing.Linear
+        }
+
+        onFinished: entity.finishedAnimation();
     }
 }
