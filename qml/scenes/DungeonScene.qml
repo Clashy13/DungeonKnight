@@ -2,11 +2,17 @@ import QtQuick
 import Felgo
 
 import "../tilemap"
+import "../entities"
 
 Scene {
     id: dungeonScene
 
-    Component.onCompleted: tilemap.updateRandom(11,7)
+    onVisibleChanged: {
+        if (visible) {
+            tilemap.updateRandom(11, 7);
+            playerManager.spawnPlayer();
+        }
+    }
 
     Rectangle {
         id: background
@@ -23,9 +29,17 @@ Scene {
             width: Math.min(parent.width, parent.height * aspectRatio)
             height: width / aspectRatio
 
-            rows: 0
-            columns: 0
-            tiles: []
+            onClicked: (row,column) => {
+                if(!playerManager.animationRunning) {
+                    playerManager.movePlayerTowards(row,column);
+                }
+            }
+        }
+
+        PlayerManager {
+            id: playerManager
+            entityContainer: tilemap
+            tilemap: tilemap
         }
     }
 }
