@@ -8,6 +8,7 @@ Item {
     property int tileSize: width / columns
     property int rows: 0
     property int columns: 0
+    signal clicked(row: int,column: int);
 
     GridLayout {
         id: gridlayout
@@ -30,6 +31,7 @@ Item {
                 column: index % tilemap.columns // get column from model index
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+                onClicked: tilemap.clicked(row, column)
             }
         }
     }
@@ -52,20 +54,20 @@ Item {
     function addNewTile(tiles, row, column) {
         // chance of lava tiles appearing
         const lavaChance = (column > 0 && tiles[row][column-1] === Tile.Lava) // if left tile is lava
-                        || (row > 0 && tiles[row-1][column] === Tile.Lava) // or if above tile is lava
-                        ? 0.4 // higher chance for lava appearing in cluster
-                        : 0.1; // lower change for lava
+                         || (row > 0 && tiles[row-1][column] === Tile.Lava) // or if above tile is lava
+                         ? 0.4 // higher chance for lava appearing in cluster
+                         : 0.1; // lower change for lava
         tiles[row][column] = Math.random() < lavaChance ? Tile.Lava : Tile.Stone;
     }
 
     function tileIsFree(row,col) {
         return (
-            row >= 0 &&
-            col >= 0 &&
-            row < tilemap.tiles.length &&
-            col < tilemap.tiles[0].length &&
-            tilemap.tiles[row][col] === Tile.Stone
-          );
+                    row >= 0 &&
+                    col >= 0 &&
+                    row < tilemap.tiles.length &&
+                    col < tilemap.tiles[0].length &&
+                    tilemap.tiles[row][col] === Tile.Stone
+                    );
     }
 
     // calculate x and y of tile center
@@ -102,6 +104,96 @@ Item {
             }
         }
         return false;
+    }
+
+    function nextStepOnPath(source, destination) {
+        const result = tilemap.getPath(source.column,source.row,destination.column,destination.row);
+        if (!result || result.length < 2)
+            return null;
+        return result[1]; // next tile after source
+    }
+
+    function getPath(x1, y1, x2, y2) {
+        const openSet = [];
+        const closedSet = new Set();
+
+        function nodeKey(x, y) {
+            return `${x},${y}`;
+        }
+
+        function heuristic(x, y) {
+            // Manhattan distance
+            return Math.abs(x - x2) + Math.abs(y - y2);
+        }
+
+        // Directions (8-way movement)
+        const directions = [
+            [1, 0], [-1, 0], [0, 1], [0, -1], // straight
+            [1, 1], [1, -1], [-1, 1], [-1, -1] // diagonals
+        ];
+
+        openSet.push({
+            x: x1,
+            y: y1,
+            g: 0,
+            h: heuristic(x1, y1),
+            f: 0,
+            parent: null
+        });
+
+        while (openSet.length > 0) {
+            // Get node with lowest f
+            openSet.sort((a, b) => a.f - b.f);
+            const current = openSet.shift();
+
+            if (current.x === x2 && current.y === y2) {
+                // Reconstruct path
+                const path = [];
+                let node = current;
+                while (node) {
+                    // convert x,y to row and column
+                    path.push({row: node.y, column: node.x});
+                    node = node.parent;
+                }
+                return path.reverse();
+            }
+
+            closedSet.add(nodeKey(current.x, current.y));
+
+            for (const [dx, dy] of directions) {
+                const nx = current.x + dx;
+                const ny = current.y + dy;
+
+                // convert x,y to row and column
+                if (!tilemap.tileIsFree(ny, nx)) continue;
+                if (closedSet.has(nodeKey(nx, ny))) continue;
+
+                const isDiagonal = dx !== 0 && dy !== 0;
+                const cost = isDiagonal ? Math.SQRT2 : 1;
+                const g = current.g + cost;
+
+                let neighbor = openSet.find(n => n.x === nx && n.y === ny);
+
+                if (!neighbor) {
+                    neighbor = {
+                        x: nx,
+                        y: ny,
+                        g: g,
+                        h: heuristic(nx, ny),
+                        f: 0,
+                        parent: current
+                    };
+                    neighbor.f = neighbor.g + neighbor.h;
+                    openSet.push(neighbor);
+                } else if (g < neighbor.g) {
+                    neighbor.g = g;
+                    neighbor.f = neighbor.g + neighbor.h;
+                    neighbor.parent = current;
+                }
+            }
+        }
+
+        return null; // No path found
     }
 }
 

@@ -35,4 +35,23 @@ EntityManager {
             }
         }
     }
+
+    function movePlayerTowards(row,column) {
+        const nextTileIndex = tilemap.nextStepOnPath({row: player.row, column: player.column},{row,column}, false);
+        if(nextTileIndex !== null && player !== undefined) {
+            movePlayerToTileIndex(nextTileIndex.row,nextTileIndex.column);
+            return nextTileIndex;
+        }
+        return null;
+    }
+
+    function movePlayerToTileIndex(row,column) {
+        if(player !== undefined) {
+            const playerPostion = tilemap.tileIndexToPosition(row,column);
+            player.row = row;
+            player.column = column;
+            player.x = playerPostion.x;
+            player.y = playerPostion.y;
+        }
+    }
 }

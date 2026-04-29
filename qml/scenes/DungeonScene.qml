@@ -28,6 +28,8 @@ Scene {
             property real aspectRatio: columns / rows
             width: Math.min(parent.width, parent.height * aspectRatio)
             height: width / aspectRatio
+
+            onClicked: (row,column) => playerManager.movePlayerTowards(row,column)
         }
 
         PlayerManager {
