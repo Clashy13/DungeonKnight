@@ -7,6 +7,7 @@ Item {
    property int type
    property int row // row inside tilemap
    property int column // column inside tilemap
+   property bool occupied
 
    signal clicked()
 

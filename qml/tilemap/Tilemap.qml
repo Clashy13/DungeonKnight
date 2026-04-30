@@ -4,7 +4,7 @@ import Felgo
 
 Item {
     id: tilemap
-    property variant tiles: [] // 2d array of tiles forming rows and columns, value is the type: Tile.Type
+    property variant tiles: [] // 2d array of tiles forming rows and columns, value is {type: Tile.type, occupied: bool}
     property int tileSize: width / columns
     property int rows: 0
     property int columns: 0
@@ -23,9 +23,15 @@ Item {
             delegate: Tile {
                 type: {
                     if(tiles[row] !== undefined && tiles[row][column] !== undefined)
-                        return tiles[row][column];
+                        return tiles[row][column].type;
                     else
                         return Tile.Stone;
+                }
+                occupied:  {
+                    if(tiles[row] !== undefined && tiles[row][column] !== undefined)
+                        return tiles[row][column].occupied;
+                    else
+                        return false;
                 }
                 row: Math.floor(index / tilemap.columns) // get row from model index
                 column: index % tilemap.columns // get column from model index
@@ -57,7 +63,8 @@ Item {
                          || (row > 0 && tiles[row-1][column] === Tile.Lava) // or if above tile is lava
                          ? 0.4 // higher chance for lava appearing in cluster
                          : 0.1; // lower change for lava
-        tiles[row][column] = Math.random() < lavaChance ? Tile.Lava : Tile.Stone;
+        const type = Math.random() < lavaChance ? Tile.Lava : Tile.Stone;
+        tiles[row][column] = {type: type, occupied: false};
     }
 
     function tileIsFree(row,col) {
@@ -66,7 +73,8 @@ Item {
                     col >= 0 &&
                     row < tilemap.tiles.length &&
                     col < tilemap.tiles[0].length &&
-                    tilemap.tiles[row][col] === Tile.Stone
+                    tilemap.tiles[row][col].type === Tile.Stone &&
+                    !tiles[row][col].occupied
                     );
     }
 
@@ -75,6 +83,26 @@ Item {
         let y = (row +0.5) / rows * height;
         let x = (column + 0.5) / columns * width;
         return Qt.point(x,y);
+    }
+
+    function setEntityToRandomTileIndex() {
+        const position = getRandomFreeTilePosition();
+        if(position === null) {
+            return null;
+        }
+        tiles[position.row][position.column].occupied = true;
+        return position;
+    }
+
+    function changeEntityTileIndex(currentRow,currentColumn,newRow,newColumn) {
+        tiles[currentRow][currentColumn].occupied = false;
+        tiles[newRow][newColumn].occupied = true;
+    }
+
+    function removeEntity(row,column) {
+        if(tiles[row] !== undefined && tiles[row][column] !== undefined) {
+            tiles[row][column].occupied = false;
+        }
     }
 
     function getRandomFreeTilePosition() {
@@ -106,14 +134,14 @@ Item {
         return false;
     }
 
-    function nextStepOnPath(source, destination) {
-        const result = tilemap.getPath(source.column,source.row,destination.column,destination.row);
+    function nextStepOnPath(source, destination, lastTileOccupied) {
+        const result = tilemap.getPath(source.column,source.row,destination.column,destination.row, lastTileOccupied);
         if (!result || result.length < 2)
             return null;
         return result[1]; // next tile after source
     }
 
-    function getPath(x1, y1, x2, y2) {
+    function getPath(x1, y1, x2, y2, lastTileOccupied) {
         const openSet = [];
         const closedSet = new Set();
 
@@ -165,7 +193,10 @@ Item {
                 const ny = current.y + dy;
 
                 // convert x,y to row and column
-                if (!tilemap.tileIsFree(ny, nx)) continue;
+                if(!(lastTileOccupied && ny === y2 && nx === x2)) {
+                    if (!tilemap.tileIsFree(ny, nx)) continue;
+                }
+
                 if (closedSet.has(nodeKey(nx, ny))) continue;
 
                 const isDiagonal = dx !== 0 && dy !== 0;

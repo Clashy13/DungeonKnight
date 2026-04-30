@@ -9,8 +9,23 @@ Scene {
 
     onVisibleChanged: {
         if (visible) {
-            tilemap.updateRandom(11, 7);
-            playerManager.spawnPlayer();
+            dungeonScene.createMap();
+        }
+    }
+
+    function createMap() {
+        tilemap.updateRandom(11, 7);
+        enemyManager.clearEnemies();
+        playerManager.spawnPlayer();
+        enemyManager.spawnEnemies(3);
+    }
+
+    function moveEntities(row,column) {
+        if(!playerManager.animationRunning) {
+            const playerTileIndex = playerManager.movePlayerTowards(row,column);
+            if(playerTileIndex !== null) {
+                enemyManager.moveEnemiesTowards(playerTileIndex.row,playerTileIndex.column);
+            }
         }
     }
 
@@ -29,11 +44,13 @@ Scene {
             width: Math.min(parent.width, parent.height * aspectRatio)
             height: width / aspectRatio
 
-            onClicked: (row,column) => {
-                if(!playerManager.animationRunning) {
-                    playerManager.movePlayerTowards(row,column);
-                }
-            }
+            onClicked: (row,column) => dungeonScene.moveEntities(row,column)
+        }
+
+        EnemyManager {
+            id: enemyManager
+            entityContainer: tilemap
+            tilemap: tilemap
         }
 
         PlayerManager {

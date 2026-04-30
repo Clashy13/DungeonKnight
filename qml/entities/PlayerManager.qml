@@ -9,7 +9,7 @@ EntityManager {
     property bool animationRunning: false
 
     function spawnPlayer() {
-        const tileIndex = tilemap.getRandomFreeTilePosition();
+        const tileIndex = tilemap.setEntityToRandomTileIndex();
 
         if(tileIndex !== null) {
             const {row,column} = tileIndex;
@@ -55,10 +55,11 @@ EntityManager {
     function movePlayerToTileIndex(row,column) {
         if(player !== undefined) {
             const playerPostion = tilemap.tileIndexToPosition(row,column);
+            tilemap.changeEntityTileIndex(player.row,player.column,row,column);
             player.row = row;
             player.column = column;
             animationRunning = true;
-            player.moveTo(playerPostion.x,playerPostion.y,160);
+            player.moveTo(playerPostion.x,playerPostion.y);
         }
     }
 }
