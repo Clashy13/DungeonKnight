@@ -9,32 +9,56 @@ EntityManager {
 
     signal attackPlayer(damage: int)
 
-    function spawnEnemies(count) {
+    function spawnEnemies(playerTileIndex, count) {
+        const tileIndexes = []
         for(let i = 0; i < count; i++) {
-            spawnEnemy();
+            const tileIndex = enemyManager.possibleRandomTileIndex(playerTileIndex);
+            if(tileIndex === null) {
+                return false;
+            }
+            tileIndexes.push(tileIndex);
         }
+
+        for(let j = 0; j < tileIndexes.length; j++) {
+            enemyManager.spawnEnemy(playerTileIndex, tileIndexes[j]);
+        }
+        return true;
     }
 
-    function spawnEnemy() {
-        const tileIndex = tilemap.setEntityToRandomTileIndex()
-        if(tileIndex !== null) {
-            const enemyPostion = tilemap.tileIndexToPosition(tileIndex.row,tileIndex.column);
-            var newEntityProperties = {
-                row: tileIndex.row,
-                column: tileIndex.column,
-                imgSize: tilemap.tileSize,
-                x: enemyPostion.x,
-                y: enemyPostion.y
+    function spawnEnemy(playerTileIndex, tileIndex) {
+        const enemyPostion = tilemap.tileIndexToPosition(tileIndex.row,tileIndex.column);
+        tilemap.setEntityTileOccupation(tileIndex.row,tileIndex.column);
+        var newEntityProperties = {
+            row: tileIndex.row,
+            column: tileIndex.column,
+            imgSize: tilemap.tileSize,
+            x: enemyPostion.x,
+            y: enemyPostion.y
+        }
+
+        const enemyId = enemyManager.createEntityFromUrlWithProperties(
+                                    Qt.resolvedUrl("Enemy.qml"),
+                                    newEntityProperties);
+        const enemy = getLastAddedEntity();
+        enemy.finishedAnimation.connect(enemyAnimationDone);
+        enemies.push({id: enemyId, enemy: enemy})
+        entityContainer.changeVisualEntityOrder();
+    }
+
+    function possibleRandomTileIndex(playerTileIndex) {
+        // try 5 times to get a valid position
+        for(let i = 0; i < 5; i++) {
+            const tileIndex = tilemap.getRandomFreeTilePosition();
+            if(tileIndex === null) {
+                return null;
             }
 
-            const enemyId = enemyManager.createEntityFromUrlWithProperties(
-                                        Qt.resolvedUrl("Enemy.qml"),
-                                        newEntityProperties);
-            const enemy = getLastAddedEntity();
-            enemy.finishedAnimation.connect(enemyAnimationDone);
-            enemies.push({id: enemyId, enemy: enemy})
-            entityContainer.changeVisualEntityOrder();
+            // check if there is a possible path to the player
+            if(tilemap.isPathPossible(tileIndex,playerTileIndex,true)) {
+                return tileIndex;
+            }
         }
+        return null;
     }
 
     function enemyActionsToTile(row,column) {

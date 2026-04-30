@@ -3,6 +3,7 @@ import Felgo
 
 import "../tilemap"
 import "../entities"
+import "../ui"
 
 Scene {
     id: dungeonScene
@@ -11,6 +12,7 @@ Scene {
 
     onVisibleChanged: {
         if (visible) {
+            playerManager.resetPlayerProperties();
             dungeonScene.createMap();
         } else {
             enemyManager.clearEnemies();
@@ -18,19 +20,62 @@ Scene {
     }
 
     function createMap() {
-        tilemap.updateRandom(11, 7);
-        enemyManager.clearEnemies();
-        playerManager.spawnPlayer();
-        enemyManager.spawnEnemies(3);
+        const rows = 11;
+        const columns = 7;
+
+        const playerTileIndex = {row: rows - 2,column: Math.floor(columns/2)};
+        const stairsTileIndex = {row: 1, column: playerTileIndex.column};
+
+        // try 20 times to get a valid setup
+        let successful = false;
+        for(let i = 0; i < 20; i++) {
+            enemyManager.clearEnemies();
+
+            tilemap.reshapeMap(rows, columns,playerTileIndex,stairsTileIndex);
+
+            playerManager.spawnPlayer(playerTileIndex.row,playerTileIndex.column);
+            if(!tilemap.isPathPossible(playerTileIndex,stairsTileIndex)) {
+                continue;
+            }
+
+            const enemiesSpawned = enemyManager.spawnEnemies(playerTileIndex,3);
+            if(!enemiesSpawned) {
+                continue;
+            }
+
+            successful = true;
+            break;
+        }
+
+        if(!successful) {
+            throw new Error("cannot create map");
+        }
     }
 
     function doPlayerActionToTile(row,column) {
         if(enemyManager.pendingAnimations === 0 && !playerManager.animationRunning) {
             const playerTileIndex = playerManager.playerActionToTile(row,column);
             if(playerTileIndex !== null) {
-                enemyManager.enemyActionsToTile(playerTileIndex.row,playerTileIndex.column);
+                if(dungeonScene.playerReadyforNextLevel()) {
+                    dungeonScene.createNextLevel();
+                } else {
+                    enemyManager.enemyActionsToTile(playerTileIndex.row,playerTileIndex.column);
+                }
             }
         }
+    }
+
+    function playerReadyforNextLevel() {
+        return playerManager.player !== undefined && playerManager.player.row === tilemap.stairsPosition.row && playerManager.player.column === tilemap.stairsPosition.column // if player on stairs
+               && enemyManager.enemies.length === 0; // if all enemies are defeated
+    }
+
+    function createNextLevel() {
+        var f = function() {
+            dungeonScene.createMap();
+            playerManager.player.finishedAnimation.disconnect(f);
+        }
+        playerManager.player.finishedAnimation.connect(f);
     }
 
     Rectangle {

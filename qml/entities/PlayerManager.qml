@@ -11,37 +11,32 @@ EntityManager {
 
     signal playerDied()
 
-    function spawnPlayer() {
-        playerManager.resetPlayerProperties();
-        const tileIndex = tilemap.setEntityToRandomTileIndex();
+    function spawnPlayer(row,column) {
+        const playerPostion = tilemap.tileIndexToPosition(row,column);
+        tilemap.setEntityTileOccupation(row,column);
 
-        if(tileIndex !== null) {
-            const {row,column} = tileIndex;
-            const playerPostion = tilemap.tileIndexToPosition(row,column);
+        if(player === undefined) {
+            var newEntityProperties = {
+                row: row,
+                column: column,
+                imgSize: tilemap.tileSize,
+                x: playerPostion.x,
+                y: playerPostion.y
+            };
 
-            if(player === undefined) {
-                var newEntityProperties = {
-                    row: row,
-                    column: column,
-                    imgSize: tilemap.tileSize,
-                    x: playerPostion.x,
-                    y: playerPostion.y
-                };
-
-                playerManager.createEntityFromUrlWithProperties(
-                            Qt.resolvedUrl("Player.qml"),
-                            newEntityProperties);
-                player = getLastAddedEntity();
-                player.finishedAnimation.connect(finishAnimation);
-            } else {
-                player.row = row;
-                player.column = column;
-                player.imgSize = tilemap.tileSize;
-                player.x = playerPostion.x;
-                player.y = playerPostion.y;
-            }
-            entityContainer.changeVisualEntityOrder();
+            playerManager.createEntityFromUrlWithProperties(
+                        Qt.resolvedUrl("Player.qml"),
+                        newEntityProperties);
+            player = getLastAddedEntity();
+            player.finishedAnimation.connect(finishAnimation);
+        } else {
+            player.row = row;
+            player.column = column;
+            player.imgSize = tilemap.tileSize;
+            player.x = playerPostion.x;
+            player.y = playerPostion.y;
         }
+        entityContainer.changeVisualEntityOrder();
     }
 
     function playerActionToTile(row,column) { // returns {row, column} of next tile
