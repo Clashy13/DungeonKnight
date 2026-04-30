@@ -7,9 +7,13 @@ import "../entities"
 Scene {
     id: dungeonScene
 
+    signal playerDied()
+
     onVisibleChanged: {
         if (visible) {
             dungeonScene.createMap();
+        } else {
+            enemyManager.clearEnemies();
         }
     }
 
@@ -20,11 +24,11 @@ Scene {
         enemyManager.spawnEnemies(3);
     }
 
-    function moveEntities(row,column) {
-        if(!playerManager.animationRunning) {
-            const playerTileIndex = playerManager.movePlayerTowards(row,column);
+    function doPlayerActionToTile(row,column) {
+        if(enemyManager.pendingAnimations === 0 && !playerManager.animationRunning) {
+            const playerTileIndex = playerManager.playerActionToTile(row,column);
             if(playerTileIndex !== null) {
-                enemyManager.moveEnemiesTowards(playerTileIndex.row,playerTileIndex.column);
+                enemyManager.enemyActionsToTile(playerTileIndex.row,playerTileIndex.column);
             }
         }
     }
@@ -32,7 +36,7 @@ Scene {
     Rectangle {
         id: background
         anchors.fill: parent
-        anchors.margins: 10
+        anchors.margins: 20
         color: "#101010"
 
         Tilemap {
@@ -44,19 +48,26 @@ Scene {
             width: Math.min(parent.width, parent.height * aspectRatio)
             height: width / aspectRatio
 
-            onClicked: (row,column) => dungeonScene.moveEntities(row,column)
+            onClicked: (row,column) => dungeonScene.doPlayerActionToTile(row,column)
+
+            EntityContainer {
+                id: entityContainer
+            }
         }
 
         EnemyManager {
             id: enemyManager
-            entityContainer: tilemap
+            entityContainer: entityContainer
             tilemap: tilemap
+            onAttackPlayer: (damage) => playerManager.attackPlayer(damage)
         }
 
         PlayerManager {
             id: playerManager
-            entityContainer: tilemap
+            entityContainer: entityContainer
             tilemap: tilemap
+            enemyManager: enemyManager
+            onPlayerDied: dungeonScene.playerDied()
         }
     }
 }
