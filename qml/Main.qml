@@ -14,6 +14,7 @@ GameWindow {
         gameWindow.activeScene = scene;
         mainMenuScene.visible = false;
         dungeonScene.visible = false;
+        gameOverScene.visible = false;
         scene.visible = true;
     }
 
@@ -24,10 +25,18 @@ GameWindow {
         onChangeToDungeonScene: gameWindow.changeScene(dungeonScene)
     }
 
+    GameOverScene {
+        id: gameOverScene
+        visible: false
+        onChangeToDungeonScene: gameWindow.changeScene(dungeonScene)
+        onChangeToMainMenuScene: gameWindow.changeScene(mainMenuScene)
+    }
+
     DungeonScene {
         id: dungeonScene
         visible: false
         width: 320
         height: 480
+        onPlayerDied: gameWindow.changeScene(gameOverScene)
     }
 }
