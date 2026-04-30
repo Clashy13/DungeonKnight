@@ -8,6 +8,8 @@ import "../ui"
 Scene {
     id: dungeonScene
 
+    property int currentDungeonLevel: 1
+
     signal playerDied()
 
     onVisibleChanged: {
@@ -58,6 +60,7 @@ Scene {
             if(playerTileIndex !== null) {
                 if(dungeonScene.playerReadyforNextLevel()) {
                     dungeonScene.createNextLevel();
+                    dungeonScene.currentDungeonLevel++;
                 } else {
                     enemyManager.enemyActionsToTile(playerTileIndex.row,playerTileIndex.column);
                 }
@@ -81,8 +84,15 @@ Scene {
     Rectangle {
         id: background
         anchors.fill: parent
-        anchors.margins: 20
         color: "#101010"
+    }
+
+    Item {
+        anchors.fill: parent
+        anchors.topMargin: 40
+        anchors.bottomMargin: 40
+        anchors.leftMargin: 10
+        anchors.rightMargin: 10
 
         Tilemap {
             id: tilemap
@@ -114,5 +124,11 @@ Scene {
             enemyManager: enemyManager
             onPlayerDied: dungeonScene.playerDied()
         }
+    }
+
+    UserInterface {
+        id: userInterface
+        anchors.fill: parent
+        currentDungeonLevel: dungeonScene.currentDungeonLevel
     }
 }
