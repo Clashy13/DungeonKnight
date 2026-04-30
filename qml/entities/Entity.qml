@@ -6,7 +6,7 @@ EntityBase {
 
     property int row // of tile
     property int column // of tile
-    property string imgSrc
+    property string imgSrc // has to be squared for right image sizing
     property int imgSize
 
     property int moveDuration
@@ -21,11 +21,12 @@ EntityBase {
         source: entity.imgSrc
     }
 
-    function moveTo(targetX, targetY, speed) {
+    function moveTo(targetX, targetY) {
         var dx = targetX - x
         var dy = targetY - y
         var distance = Math.sqrt(dx*dx + dy*dy)
 
+        const speed = entity.imgSize * 4
         moveDuration = distance / speed * 1000
 
         moveAnim.animations[0].to = targetX
