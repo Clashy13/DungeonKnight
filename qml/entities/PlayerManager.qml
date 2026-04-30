@@ -40,6 +40,7 @@ EntityManager {
                 player.x = playerPostion.x;
                 player.y = playerPostion.y;
             }
+            entityContainer.changeVisualEntityOrder();
         }
     }
 
@@ -78,6 +79,7 @@ EntityManager {
             player.column = column;
             animationRunning = true;
             player.moveTo(playerPostion.x,playerPostion.y);
+            entityContainer.changeVisualEntityOrder();
         }
     }
 

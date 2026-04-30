@@ -36,7 +36,7 @@ Scene {
     Rectangle {
         id: background
         anchors.fill: parent
-        anchors.margins: 10
+        anchors.margins: 20
         color: "#101010"
 
         Tilemap {
@@ -49,18 +49,22 @@ Scene {
             height: width / aspectRatio
 
             onClicked: (row,column) => dungeonScene.doPlayerActionToTile(row,column)
+
+            EntityContainer {
+                id: entityContainer
+            }
         }
 
         EnemyManager {
             id: enemyManager
-            entityContainer: tilemap
+            entityContainer: entityContainer
             tilemap: tilemap
             onAttackPlayer: (damage) => playerManager.attackPlayer(damage)
         }
 
         PlayerManager {
             id: playerManager
-            entityContainer: tilemap
+            entityContainer: entityContainer
             tilemap: tilemap
             enemyManager: enemyManager
             onPlayerDied: dungeonScene.playerDied()

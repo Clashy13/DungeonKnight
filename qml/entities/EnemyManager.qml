@@ -33,6 +33,7 @@ EntityManager {
             const enemy = getLastAddedEntity();
             enemy.finishedAnimation.connect(enemyAnimationDone);
             enemies.push({id: enemyId, enemy: enemy})
+            entityContainer.changeVisualEntityOrder();
         }
     }
 
@@ -70,6 +71,7 @@ EntityManager {
         enemy.column = column;
         pendingAnimations++;
         enemy.moveTo(enemyPostion.x,enemyPostion.y);
+        entityContainer.changeVisualEntityOrder();
     }
 
     function attackEnemy(damage,row,column) { // returns true if enemy has been killed
@@ -102,6 +104,7 @@ EntityManager {
         removeEntityById(id);
         tilemap.removeEntity(enemy.row,enemy.column);
         enemies = enemies.filter((enemy) => enemy.id !== id);
+        entityContainer.changeVisualEntityOrder();
     }
 
     function clearEnemies() {
@@ -110,6 +113,9 @@ EntityManager {
         for(let i = 0; i < enemies.length; i++) {
             tilemap.removeEntity(enemies[i].row,enemies[i].column);
         }
-        enemies.length = 0;
+        if(enemies.length > 0) {
+            enemies.length = 0;
+            entityContainer.changeVisualEntityOrder();
+        }
     }
 }
