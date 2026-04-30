@@ -36,9 +36,17 @@ EntityManager {
         }
     }
 
-    function moveEnemiesTowards(row,column) {
+    function enemyActionsToTile(row,column) {
         for (var i = 0; i < enemies.length; i++) {
-            moveEnemyTowards(enemies[i].enemy,row,column);
+            enemyManager.enemyActionToTile(enemies[i].enemy,row,column);
+        }
+    }
+
+    function enemyActionToTile(enemy,row,column) {
+        if(enemyManager.isNeighboringTile(enemy,row,column)) {
+            enemyManager.attackPlayer(enemy.damage);
+        } else {
+            enemyManager.moveEnemyTowards(enemy,row,column);
         }
     }
 
@@ -57,11 +65,24 @@ EntityManager {
 
     function moveEnemyToTileIndex(enemy,row,column) {
         const enemyPostion = tilemap.tileIndexToPosition(row,column);
-        tilemap.changeEntityTileIndex(enemy.row,enemy.column,row,column);
+        tilemap.changeEntityTileOccupation(enemy.row,enemy.column,row,column);
         enemy.row = row;
         enemy.column = column;
         pendingAnimations++;
         enemy.moveTo(enemyPostion.x,enemyPostion.y);
+    }
+
+    function attackEnemy(damage,row,column) { // returns true if enemy has been killed
+        const enemyProperties = enemyManager.enemyAtPosition(row,column);
+        if(enemyProperties !== null) {
+            const {id, enemy} = enemyProperties;
+            enemy.currentHealth -= damage;
+            if(enemy.currentHealth <= 0) {
+                enemyManager.removeEnemy(enemy,id)
+                return true;
+            }
+        }
+        return false;
     }
 
     function enemyAnimationDone() {
@@ -85,8 +106,9 @@ EntityManager {
 
     function clearEnemies() {
         removeAllEntities();
+        enemyManager.pendingAnimations = 0;
         for(let i = 0; i < enemies.length; i++) {
-            tilemap.removeEntity(enemies[i],row,enemies[i].column);
+            tilemap.removeEntity(enemies[i].row,enemies[i].column);
         }
         enemies.length = 0;
     }

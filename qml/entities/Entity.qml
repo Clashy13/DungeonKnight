@@ -9,6 +9,10 @@ EntityBase {
     property string imgSrc // has to be squared for right image sizing
     property int imgSize
 
+    property int currentHealth
+    property int maxHealth
+    property int damage
+
     property int moveDuration
     signal finishedAnimation()
 
