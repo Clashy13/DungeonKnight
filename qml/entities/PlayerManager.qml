@@ -7,68 +7,143 @@ EntityManager {
     property variant player
     property variant enemyManager
 
-    property bool animationRunning: false
+    property int defaultHealth: 8
+    property int defaultDamage: 3
+
+    property int currentHealth: defaultHealth
+    property int maxHealth: defaultHealth
+    property int damage: defaultDamage
+
+    property int reviveCount: 0
+    property bool berserkActive: false
+    property int berserkIncreasedDamage: 0
+    property int additionalHealthOntKill: 0
+
+    property var targetTileIndex
 
     signal playerDied()
+    signal finishedTurn()
 
-    function spawnPlayer() {
-        playerManager.resetPlayerProperties();
-        const tileIndex = tilemap.setEntityToRandomTileIndex();
+    function spawnPlayer(row,column) {
+        const playerPostion = tilemap.tileIndexToPosition(row,column);
+        tilemap.setEntityTileOccupation(row,column);
 
-        if(tileIndex !== null) {
-            const {row,column} = tileIndex;
-            const playerPostion = tilemap.tileIndexToPosition(row,column);
+        if(player === undefined) {
+            var newEntityProperties = {
+                row: row,
+                column: column,
+                imgSize: tilemap.tileSize,
+                x: playerPostion.x,
+                y: playerPostion.y
+            };
 
-            if(player === undefined) {
-                var newEntityProperties = {
-                    row: row,
-                    column: column,
-                    imgSize: tilemap.tileSize,
-                    x: playerPostion.x,
-                    y: playerPostion.y
-                };
-
-                playerManager.createEntityFromUrlWithProperties(
-                            Qt.resolvedUrl("Player.qml"),
-                            newEntityProperties);
-                player = getLastAddedEntity();
-                player.finishedAnimation.connect(finishAnimation);
-            } else {
-                player.row = row;
-                player.column = column;
-                player.imgSize = tilemap.tileSize;
-                player.x = playerPostion.x;
-                player.y = playerPostion.y;
-            }
-            entityContainer.changeVisualEntityOrder();
+            playerManager.createEntityFromUrlWithProperties(
+                        Qt.resolvedUrl("Player.qml"),
+                        newEntityProperties);
+            player = getLastAddedEntity();
+        } else {
+            player.row = row;
+            player.column = column;
+            player.imgSize = tilemap.tileSize;
+            player.x = playerPostion.x;
+            player.y = playerPostion.y;
         }
+        entityContainer.changeVisualEntityOrder();
+    }
+
+    function playerStats() {
+        return [
+                {"name": "Damage","value":playerManager.damage},
+                {"name": "Revives","value":playerManager.reviveCount},
+                {"name": "Health on Kill","value":playerManager.additionalHealthOntKill},
+                {"name": "Berserk Damage","value":playerManager.berserkDamage()}]
     }
 
     function playerActionToTile(row,column) { // returns {row, column} of next tile
+        playerManager.targetTileIndex = {row:row,column:column};
         if(playerManager.isNeighboringTileToPlayer(row,column)) {
             if(tilemap.tiles[row][column].occupied) {
-                const moved = playerManager.attackEnemy(row,column)
-                if(moved) {
+                const killed = playerManager.attackEnemy(row,column)
+                if(killed) {
+                    playerManager.healAmount(playerManager.additionalHealthOntKill);
                     playerManager.movePlayerToTileIndex(row,column);
+                    playerManager.finishTurnAfterAnimation();
                     return {row: player.row,column: player.column};
                 } else {
+                    playerManager.finishedTurn();
                     return {row: player.row,column: player.column}
                 }
             } else {
                 playerManager.movePlayerToTileIndex(row,column);
+                playerManager.finishTurnAfterAnimation();
                 return {row: player.row,column: player.column};
             }
         }
-        return movePlayerTowards(row,column);
+        const tileIndex = movePlayerTowards(row,column);
+        playerManager.finishTurnAfterAnimation();
+        return tileIndex;
+    }
+
+    function finishTurnAfterAnimation() {
+        var f = () => {
+            playerManager.finishedTurn();
+            playerManager.player.finishedAnimation.disconnect(f);
+        }
+        playerManager.player.finishedAnimation.connect(f);
     }
 
     function movePlayerTowards(row,column) { // returns {row, column} of next tile or null if not moving
-        const nextTileIndex = tilemap.nextStepOnPath({row: player.row, column: player.column},{row,column}, true);
-        if(nextTileIndex !== null && player !== undefined) {
-            playerManager.movePlayerToTileIndex(nextTileIndex.row,nextTileIndex.column);
-            return nextTileIndex;
+        if(enemyManager.enemies.length === 0) {
+            playerManager.movePlayerAlongPathTo(row,column);
+        } else {
+            const nextTileIndex = tilemap.nextStepOnPath({row: player.row, column: player.column},{row,column}, true);
+            if(nextTileIndex !== null && player !== undefined) {
+                playerManager.movePlayerToTileIndex(nextTileIndex.row,nextTileIndex.column);
+                return nextTileIndex;
+            }
+            return null;
         }
-        return null;
+    }
+
+    function movePlayerAlongPathTo(row,column) {
+        if(player !== undefined) {
+            const pathOfTiles = tilemap.getPath(player.column,player.row,column,row);
+            if(pathOfTiles !== null) {
+                const path = pathOfTiles.map(tileIndex => {
+                    return {tile: tileIndex, position: tilemap.tileIndexToPosition(tileIndex.row,tileIndex.column)};
+                });
+                playerManager.movePlayerAlongPath(path,1,row,column);
+                if(playerManager.targetTileChanged(row,column)) {
+                    playerManager.movePlayerAlongPathTo(playerManager.targetTileIndex.row,playerManager.targetTileIndex.column);
+                }
+            }
+        }
+    }
+
+    function movePlayerAlongPath(path, index, targetrow, targetColumn) {
+        if(playerManager.targetTileChanged(targetrow,targetColumn)) {
+            return;
+        }
+
+        const {row,column} = path[index].tile;
+        const {x,y} = path[index].position;
+        player.moveTo(x,y);
+
+        const f = () => {
+            tilemap.changeEntityTileOccupation(player.row,player.column,row,column);
+            player.row = row;
+            player.column = column;
+            if(index + 1 < path.length) {
+                playerManager.movePlayerAlongPath(path, index + 1, targetrow, targetColumn);
+            }
+            playerManager.finishTurnAfterAnimation();
+            player.finshedPartAnimation.disconnect(f);
+        }
+        player.finshedPartAnimation.connect(f);
+    }
+
+    function targetTileChanged(row,column) {
+        return row !== playerManager.targetTileIndex.row || column !== playerManager.targetTileIndex.column;
     }
 
     function movePlayerToTileIndex(row,column) {
@@ -77,7 +152,6 @@ EntityManager {
             tilemap.changeEntityTileOccupation(player.row,player.column,row,column);
             player.row = row;
             player.column = column;
-            animationRunning = true;
             player.moveTo(playerPostion.x,playerPostion.y);
             entityContainer.changeVisualEntityOrder();
         }
@@ -85,7 +159,8 @@ EntityManager {
 
 
     function attackEnemy(row,column) { // returns true if enemy has been killed and the player should move
-        return enemyManager.attackEnemy(player.damage,row,column);
+        const actualDamage = playerManager.damage + playerManager.berserkDamage();
+        return enemyManager.attackEnemy(actualDamage,row,column);
     }
 
     function isNeighboringTileToPlayer(row,column) {
@@ -93,19 +168,38 @@ EntityManager {
     }
 
     function attackPlayer(damage) {
-        player.currentHealth -= damage;
-        if(player.currentHealth <= 0) {
-            playerManager.playerDied();
+        playerManager.currentHealth -= damage;
+        if(playerManager.currentHealth <= 0) {
+            if(playerManager.reviveCount > 0) {
+                playerManager.reviveCount--;
+                playerManager.currentHealth = Math.floor(playerManager.maxHealth / 2);
+            } else {
+               playerManager.playerDied();
+            }
         }
     }
 
     function resetPlayerProperties() {
-        if(player !== undefined) {
-            player.currentHealth = player.maxHealth;
+        playerManager.currentHealth = playerManager.defaultHealth;
+        playerManager.maxHealth = playerManager.defaultHealth;
+        playerManager.damage = playerManager.defaultDamage;
+        playerManager.reviveCount = 0;
+        playerManager.berserkActive = false;
+        playerManager.berserkIncreasedDamage = 0;
+        playerManager.additionalHealthOntKill = 0;
+    }
+
+    function healAmount(amount) {
+        if(amount > 0) {
+            playerManager.currentHealth = Math.min(playerManager.maxHealth,playerManager.currentHealth+amount);
         }
     }
 
-    function finishAnimation() {
-        animationRunning = false;
+    function berserkDamage() {
+        if(playerManager.berserkActive) {
+            const missingHP = playerManager.maxHealth - playerManager.currentHealth;
+            return Math.floor(missingHP / 2) * playerManager.berserkIncreasedDamage;
+        }
+        return 0;
     }
 }

@@ -7,39 +7,82 @@ EntityManager {
     property var enemies: []
     property int pendingAnimations: 0
 
-    signal attackPlayer(damage: int)
+    property int defaultHealth: 5
+    property int defaultDamage: 1
+    property int defaultEnemyCount: 2
+    property int maxEnemyCount: 20
 
-    function spawnEnemies(count) {
-        for(let i = 0; i < count; i++) {
-            spawnEnemy();
+    property int health: defaultHealth
+    property int damage: defaultDamage
+
+    property int enemyCount: defaultEnemyCount
+    property bool enemyCountIsDoubled: false
+
+    signal attackPlayer(damage: int)
+    signal finishedTurn()
+
+    function spawnEnemies(playerTileIndex) {
+        const tileIndexes = []
+        const actualEnemyCount = enemyManager.enemyCountIsDoubled ? enemyManager.enemyCount * 2: enemyManager.enemyCount;
+        for(let i = 0; i < actualEnemyCount; i++) {
+            const tileIndex = enemyManager.possibleRandomTileIndex(playerTileIndex,tileIndexes);
+            if(tileIndex === null) {
+                return false;
+            }
+            tileIndexes.push(tileIndex);
         }
+
+        for(let j = 0; j < tileIndexes.length; j++) {
+            enemyManager.spawnEnemy(playerTileIndex, tileIndexes[j]);
+        }
+        return true;
     }
 
-    function spawnEnemy() {
-        const tileIndex = tilemap.setEntityToRandomTileIndex()
-        if(tileIndex !== null) {
-            const enemyPostion = tilemap.tileIndexToPosition(tileIndex.row,tileIndex.column);
-            var newEntityProperties = {
-                row: tileIndex.row,
-                column: tileIndex.column,
-                imgSize: tilemap.tileSize,
-                x: enemyPostion.x,
-                y: enemyPostion.y
+    function spawnEnemy(playerTileIndex, tileIndex) {
+        const enemyPostion = tilemap.tileIndexToPosition(tileIndex.row,tileIndex.column);
+        tilemap.setEntityTileOccupation(tileIndex.row,tileIndex.column);
+        var newEntityProperties = {
+            row: tileIndex.row,
+            column: tileIndex.column,
+            imgSize: tilemap.tileSize,
+            x: enemyPostion.x,
+            y: enemyPostion.y,
+            currentHealth: enemyManager.health,
+            maxHealth: enemyManager.health,
+            damage: enemyManager.damage
+        }
+
+        const enemyId = enemyManager.createEntityFromUrlWithProperties(
+                                    Qt.resolvedUrl("Enemy.qml"),
+                                    newEntityProperties);
+        const enemy = getLastAddedEntity();
+        enemy.finishedAnimation.connect(enemyAnimationDone);
+        enemies.push({id: enemyId, enemy: enemy})
+        entityContainer.changeVisualEntityOrder();
+    }
+
+    function possibleRandomTileIndex(playerTileIndex, preventTileIndexes) {
+        // try 5 times to get a valid position
+        for(let i = 0; i < 5; i++) {
+            const tileIndex = tilemap.getRandomFreeTilePosition(preventTileIndexes);
+            if(tileIndex === null) {
+                return null;
             }
 
-            const enemyId = enemyManager.createEntityFromUrlWithProperties(
-                                        Qt.resolvedUrl("Enemy.qml"),
-                                        newEntityProperties);
-            const enemy = getLastAddedEntity();
-            enemy.finishedAnimation.connect(enemyAnimationDone);
-            enemies.push({id: enemyId, enemy: enemy})
-            entityContainer.changeVisualEntityOrder();
+            // check if there is a possible path to the player
+            if(tilemap.isPathPossible(tileIndex,playerTileIndex,true)) {
+                return tileIndex;
+            }
         }
+        return null;
     }
 
     function enemyActionsToTile(row,column) {
         for (var i = 0; i < enemies.length; i++) {
             enemyManager.enemyActionToTile(enemies[i].enemy,row,column);
+        }
+        if(enemyManager.pendingAnimations === 0) {
+            enemyManager.finishedTurn();
         }
     }
 
@@ -89,6 +132,9 @@ EntityManager {
 
     function enemyAnimationDone() {
         pendingAnimations--;
+        if(pendingAnimations === 0) {
+            enemyManager.finishedTurn();
+        }
     }
 
     function enemyAtPosition(row,column) {
@@ -117,5 +163,13 @@ EntityManager {
             enemies.length = 0;
             entityContainer.changeVisualEntityOrder();
         }
+    }
+
+    function resetEnemyProperties() {
+        enemyManager.pendingAnimations = 0;
+        enemyManager.health = enemyManager.defaultHealth;
+        enemyManager.damage = enemyManager.defaultDamage;
+        enemyManager.enemyCount = enemyManager.defaultEnemyCount;
+        enemyManager.enemyCountIsDoubled = false;
     }
 }

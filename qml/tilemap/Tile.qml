@@ -13,24 +13,29 @@ Item {
 
    enum Type {
       Stone,
-      Lava
+      Lava,
+      Stairs
    }
 
    Image {
-     anchors.fill: parent
-     smooth: false
-     source: {
-       if (tile.type === Tile.Stone)
-         return "../../assets/stone_tile.png"
-       else
-         return "../../assets/lava_tile.png"
-     }
+      anchors.fill: parent
+      smooth: false
+      source: {
+         switch(tile.type) {
+         case Tile.Stairs:
+            return "../../assets/stairs_tile.png"
+         case Tile.Lava:
+            return "../../assets/lava_tile.png"
+         default:
+            return "../../assets/stone_tile.png"
+         }
+      }
    }
 
    Rectangle {
       anchors.fill: parent
       color: Qt.rgba(0.17,0.93,0.89,0.4)
-      visible: tile.type === Tile.Stone && mouseArea.containsMouse
+      visible: (tile.type === Tile.Stone || tile.type === Tile.Stairs) && mouseArea.containsMouse
    }
 
    MouseArea {
@@ -38,9 +43,9 @@ Item {
       anchors.fill: parent
       hoverEnabled: true;
       onClicked: {
-         if(tile.type === Tile.Stone) {
+         if(tile.type === Tile.Stone || tile.type === Tile.Stairs) {
             tile.clicked()
          }
       }
    }
- }
+}

@@ -9,12 +9,9 @@ EntityBase {
     property string imgSrc // has to be squared for right image sizing
     property int imgSize
 
-    property int currentHealth
-    property int maxHealth
-    property int damage
-
     property int moveDuration
     signal finishedAnimation()
+    signal finshedPartAnimation()
 
     Image {
         x: -entity.imgSize/ 2
@@ -23,17 +20,6 @@ EntityBase {
         height: entity.imgSize
         smooth: false
         source: entity.imgSrc
-
-        HealthBar {
-            id: healthBar
-            visible: entity.currentHealth < entity.maxHealth
-            width: parent.width * 0.8
-            anchors.horizontalCenter: parent.horizontalCenter
-            height: parent.height / 10
-            y: -healthBar.height*2
-            value: entity.currentHealth
-            max: entity.maxHealth
-        }
     }
 
     function moveTo(targetX, targetY) {
@@ -67,6 +53,9 @@ EntityBase {
             easing.type: Easing.Linear
         }
 
-        onFinished: entity.finishedAnimation();
+        onFinished: {
+            entity.finshedPartAnimation();
+            entity.finishedAnimation();
+        }
     }
 }

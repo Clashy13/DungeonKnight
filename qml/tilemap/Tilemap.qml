@@ -8,6 +8,7 @@ Item {
     property int tileSize: width / columns
     property int rows: 0
     property int columns: 0
+    property variant stairsPosition
     signal clicked(row: int,column: int);
 
     GridLayout {
@@ -42,22 +43,30 @@ Item {
         }
     }
 
-    function updateRandom(rows, columns) {
+    function reshapeMap(rows, columns, playerPosition, stairsPosition) {
         tilemap.rows = rows;
         tilemap.columns = columns;
+        tilemap.stairsPosition = stairsPosition;
+
         const newTiles = [];
         for(let row = 0; row < rows; row++) {
             for(let col = 0; col < columns; col++) {
                 if(newTiles[row] === undefined) {
                     newTiles[row] = [];
                 }
-                addNewTile(newTiles,row,col);
+                if(row === playerPosition.row && col === playerPosition.column) {
+                    newTiles[row][col] = {type: Tile.Stone, occupied: false};
+                } else if(row === stairsPosition.row && col === stairsPosition.column) {
+                    newTiles[row][col] = {type: Tile.Stairs, occupied: false};
+                } else {
+                    addNewRandomTile(newTiles,row,col);
+                }
             }
         }
         tilemap.tiles = newTiles;
     }
 
-    function addNewTile(tiles, row, column) {
+    function addNewRandomTile(tiles, row, column) {
         // chance of lava tiles appearing
         const lavaChance = (column > 0 && tiles[row][column-1] === Tile.Lava) // if left tile is lava
                          || (row > 0 && tiles[row-1][column] === Tile.Lava) // or if above tile is lava
@@ -73,7 +82,7 @@ Item {
                     col >= 0 &&
                     row < tilemap.tiles.length &&
                     col < tilemap.tiles[0].length &&
-                    tilemap.tiles[row][col].type === Tile.Stone &&
+                    (tilemap.tiles[row][col].type === Tile.Stone || tilemap.tiles[row][col].type === Tile.Stairs) &&
                     !tiles[row][col].occupied
                     );
     }
@@ -99,13 +108,17 @@ Item {
         tiles[newRow][newColumn].occupied = true;
     }
 
+    function setEntityTileOccupation(row,column) {
+        tiles[row][column].occupied = true;
+    }
+
     function removeEntity(row,column) {
         if(tiles[row] !== undefined && tiles[row][column] !== undefined) {
             tiles[row][column].occupied = false;
         }
     }
 
-    function getRandomFreeTilePosition() {
+    function getRandomFreeTilePosition(preventTileIndexes) {
         if(!tilemap.freeTileExists()) {
             return null;
         }
@@ -113,7 +126,7 @@ Item {
         while(true) {
             const row = tilemap.randomNumberBetween(0,rows);
             const column = tilemap.randomNumberBetween(0,columns);
-            if(tilemap.tileIsFree(row,column)) {
+            if(!preventTileIndexes.some(tile => tile.row === row && tile.column === column) && tilemap.tileIsFree(row,column)) {
                 return {row,column};
             }
         }
@@ -132,6 +145,10 @@ Item {
             }
         }
         return false;
+    }
+
+    function isPathPossible(source, destination, lastTileOccupied) {
+      return getPath(source.column,source.row,destination.column,destination.row, lastTileOccupied) !== null;
     }
 
     function nextStepOnPath(source, destination, lastTileOccupied) {
@@ -193,7 +210,8 @@ Item {
                 const ny = current.y + dy;
 
                 // convert x,y to row and column
-                if(!(lastTileOccupied && ny === y2 && nx === x2)) {
+
+                if(!(lastTileOccupied && ny === y2 && nx === x2) && !(nx === x1 && ny === y1)) {
                     if (!tilemap.tileIsFree(ny, nx)) continue;
                 }
 
