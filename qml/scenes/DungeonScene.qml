@@ -9,6 +9,13 @@ Scene {
     id: dungeonScene
 
     property int currentDungeonLevel: 1
+    property int turn: DungeonScene.Paused
+
+    enum Turn {
+        Player,
+        Enemies,
+        Paused
+    }
 
     signal playerDied()
 
@@ -58,16 +65,8 @@ Scene {
     }
 
     function doPlayerActionToTile(row,column) {
-        if(enemyManager.pendingAnimations === 0 && !playerManager.animationRunning) {
-            const playerTileIndex = playerManager.playerActionToTile(row,column);
-            if(playerTileIndex !== null) {
-                if(dungeonScene.playerReadyforNextLevel()) {
-                    dungeonScene.openReward();
-                } else {
-                    enemyManager.enemyActionsToTile(playerTileIndex.row,playerTileIndex.column);
-                }
-            }
-        }
+        dungeonScene.turn = DungeonScene.Player;
+        const playerTileIndex = playerManager.playerActionToTile(row,column);
     }
 
     function playerReadyforNextLevel() {
@@ -75,13 +74,15 @@ Scene {
                && enemyManager.enemies.length === 0; // if all enemies are defeated
     }
 
-    function openReward() {
-        var f = function() {
+    function doActionsAfterPlayerTurn(playerTileIndex) {
+        if(dungeonScene.playerReadyforNextLevel()) {
+            dungeonScene.turn = DungeonScene.Paused;
             userInterface.showReward();
             dungeonScene.resetOneRoundRewards();
-            playerManager.player.finishedAnimation.disconnect(f);
+        } else {
+            dungeonScene.turn = DungeonScene.Enemies;
+            enemyManager.enemyActionsToTile(playerManager.player.row,playerManager.player.column);
         }
-        playerManager.player.finishedAnimation.connect(f);
     }
 
     function createNextLevel() {
@@ -111,7 +112,11 @@ Scene {
             width: Math.min(parent.width, parent.height * aspectRatio)
             height: width / aspectRatio
 
-            onClicked: (row,column) => dungeonScene.doPlayerActionToTile(row,column)
+            onClicked: (row,column) => {
+               if(dungeonScene.turn === DungeonScene.Paused) {
+                    dungeonScene.doPlayerActionToTile(row,column)
+                }
+            }
 
             EntityContainer {
                 id: entityContainer
@@ -123,6 +128,7 @@ Scene {
             entityContainer: entityContainer
             tilemap: tilemap
             onAttackPlayer: (damage) => playerManager.attackPlayer(damage)
+            onFinishedTurn: dungeonScene.turn = DungeonScene.Paused;
         }
 
         PlayerManager {
@@ -131,6 +137,9 @@ Scene {
             tilemap: tilemap
             enemyManager: enemyManager
             onPlayerDied: dungeonScene.playerDied()
+            onFinishedTurn: {
+                dungeonScene.doActionsAfterPlayerTurn();
+            }
         }
     }
 

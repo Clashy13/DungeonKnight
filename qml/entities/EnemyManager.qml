@@ -19,6 +19,7 @@ EntityManager {
     property bool enemyCountIsDoubled: false
 
     signal attackPlayer(damage: int)
+    signal finishedTurn()
 
     function spawnEnemies(playerTileIndex) {
         const tileIndexes = []
@@ -80,6 +81,9 @@ EntityManager {
         for (var i = 0; i < enemies.length; i++) {
             enemyManager.enemyActionToTile(enemies[i].enemy,row,column);
         }
+        if(enemyManager.pendingAnimations === 0) {
+            enemyManager.finishedTurn();
+        }
     }
 
     function enemyActionToTile(enemy,row,column) {
@@ -128,6 +132,9 @@ EntityManager {
 
     function enemyAnimationDone() {
         pendingAnimations--;
+        if(pendingAnimations === 0) {
+            enemyManager.finishedTurn();
+        }
     }
 
     function enemyAtPosition(row,column) {
@@ -159,6 +166,7 @@ EntityManager {
     }
 
     function resetEnemyProperties() {
+        enemyManager.pendingAnimations = 0;
         enemyManager.health = enemyManager.defaultHealth;
         enemyManager.damage = enemyManager.defaultDamage;
         enemyManager.enemyCount = enemyManager.defaultEnemyCount;

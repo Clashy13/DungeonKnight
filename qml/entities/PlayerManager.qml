@@ -19,9 +19,8 @@ EntityManager {
     property int berserkIncreasedDamage: 0
     property int additionalHealthOntKill: 0
 
-    property bool animationRunning: false
-
     signal playerDied()
+    signal finishedTurn()
 
     function spawnPlayer(row,column) {
         const playerPostion = tilemap.tileIndexToPosition(row,column);
@@ -40,7 +39,6 @@ EntityManager {
                         Qt.resolvedUrl("Player.qml"),
                         newEntityProperties);
             player = getLastAddedEntity();
-            player.finishedAnimation.connect(finishAnimation);
         } else {
             player.row = row;
             player.column = column;
@@ -66,16 +64,29 @@ EntityManager {
                 if(killed) {
                     playerManager.healAmount(playerManager.additionalHealthOntKill);
                     playerManager.movePlayerToTileIndex(row,column);
+                    playerManager.finishTurnAfterAnimation();
                     return {row: player.row,column: player.column};
                 } else {
+                    playerManager.finishedTurn();
                     return {row: player.row,column: player.column}
                 }
             } else {
                 playerManager.movePlayerToTileIndex(row,column);
+                playerManager.finishTurnAfterAnimation();
                 return {row: player.row,column: player.column};
             }
         }
-        return movePlayerTowards(row,column);
+        const tileIndex = movePlayerTowards(row,column);
+        playerManager.finishTurnAfterAnimation();
+        return tileIndex;
+    }
+
+    function finishTurnAfterAnimation() {
+        var f = () => {
+            playerManager.finishedTurn();
+            playerManager.player.finishedAnimation.disconnect(f);
+        }
+        playerManager.player.finishedAnimation.connect(f);
     }
 
     function movePlayerTowards(row,column) { // returns {row, column} of next tile or null if not moving
@@ -93,7 +104,6 @@ EntityManager {
             tilemap.changeEntityTileOccupation(player.row,player.column,row,column);
             player.row = row;
             player.column = column;
-            animationRunning = true;
             player.moveTo(playerPostion.x,playerPostion.y);
             entityContainer.changeVisualEntityOrder();
         }
@@ -129,10 +139,6 @@ EntityManager {
         playerManager.berserkActive = false;
         playerManager.berserkIncreasedDamage = 0;
         playerManager.additionalHealthOntKill = 0;
-    }
-
-    function finishAnimation() {
-        animationRunning = false;
     }
 
     function healAmount(amount) {
