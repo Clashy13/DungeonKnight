@@ -114,7 +114,7 @@ EntityManager {
         if(playerManager.currentHealth <= 0) {
             if(playerManager.reviveCount > 0) {
                 playerManager.reviveCount--;
-                playerManager.currentHealth = playerManager.maxHealth;
+                playerManager.currentHealth = Math.floor(playerManager.maxHealth / 2);
             } else {
                playerManager.playerDied();
             }
