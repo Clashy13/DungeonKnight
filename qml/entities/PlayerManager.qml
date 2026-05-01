@@ -19,6 +19,8 @@ EntityManager {
     property int berserkIncreasedDamage: 0
     property int additionalHealthOntKill: 0
 
+    property var targetTileIndex
+
     signal playerDied()
     signal finishedTurn()
 
@@ -58,6 +60,7 @@ EntityManager {
     }
 
     function playerActionToTile(row,column) { // returns {row, column} of next tile
+        playerManager.targetTileIndex = {row:row,column:column};
         if(playerManager.isNeighboringTileToPlayer(row,column)) {
             if(tilemap.tiles[row][column].occupied) {
                 const killed = playerManager.attackEnemy(row,column)
@@ -90,12 +93,57 @@ EntityManager {
     }
 
     function movePlayerTowards(row,column) { // returns {row, column} of next tile or null if not moving
-        const nextTileIndex = tilemap.nextStepOnPath({row: player.row, column: player.column},{row,column}, true);
-        if(nextTileIndex !== null && player !== undefined) {
-            playerManager.movePlayerToTileIndex(nextTileIndex.row,nextTileIndex.column);
-            return nextTileIndex;
+        if(enemyManager.enemies.length === 0) {
+            playerManager.movePlayerAlongPathTo(row,column);
+        } else {
+            const nextTileIndex = tilemap.nextStepOnPath({row: player.row, column: player.column},{row,column}, true);
+            if(nextTileIndex !== null && player !== undefined) {
+                playerManager.movePlayerToTileIndex(nextTileIndex.row,nextTileIndex.column);
+                return nextTileIndex;
+            }
+            return null;
         }
-        return null;
+    }
+
+    function movePlayerAlongPathTo(row,column) {
+        if(player !== undefined) {
+            const pathOfTiles = tilemap.getPath(player.column,player.row,column,row);
+            if(pathOfTiles !== null) {
+                const path = pathOfTiles.map(tileIndex => {
+                    return {tile: tileIndex, position: tilemap.tileIndexToPosition(tileIndex.row,tileIndex.column)};
+                });
+                playerManager.movePlayerAlongPath(path,1,row,column);
+                if(playerManager.targetTileChanged(row,column)) {
+                    playerManager.movePlayerAlongPathTo(playerManager.targetTileIndex.row,playerManager.targetTileIndex.column);
+                }
+            }
+        }
+    }
+
+    function movePlayerAlongPath(path, index, targetrow, targetColumn) {
+        if(playerManager.targetTileChanged(targetrow,targetColumn)) {
+            return;
+        }
+
+        const {row,column} = path[index].tile;
+        const {x,y} = path[index].position;
+        player.moveTo(x,y);
+
+        const f = () => {
+            tilemap.changeEntityTileOccupation(player.row,player.column,row,column);
+            player.row = row;
+            player.column = column;
+            if(index + 1 < path.length) {
+                playerManager.movePlayerAlongPath(path, index + 1, targetrow, targetColumn);
+            }
+            playerManager.finishTurnAfterAnimation();
+            player.finshedPartAnimation.disconnect(f);
+        }
+        player.finshedPartAnimation.connect(f);
+    }
+
+    function targetTileChanged(row,column) {
+        return row !== playerManager.targetTileIndex.row || column !== playerManager.targetTileIndex.column;
     }
 
     function movePlayerToTileIndex(row,column) {

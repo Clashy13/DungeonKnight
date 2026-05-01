@@ -114,7 +114,7 @@ Scene {
 
             onClicked: (row,column) => {
                if(dungeonScene.turn === DungeonScene.Paused) {
-                    dungeonScene.doPlayerActionToTile(row,column)
+                    dungeonScene.doPlayerActionToTile(row,column);
                 }
             }
 

@@ -11,6 +11,7 @@ EntityBase {
 
     property int moveDuration
     signal finishedAnimation()
+    signal finshedPartAnimation()
 
     Image {
         x: -entity.imgSize/ 2
@@ -52,6 +53,9 @@ EntityBase {
             easing.type: Easing.Linear
         }
 
-        onFinished: entity.finishedAnimation();
+        onFinished: {
+            entity.finshedPartAnimation();
+            entity.finishedAnimation();
+        }
     }
 }
