@@ -20,6 +20,7 @@ Scene {
             userInterface.showReward();
         } else {
             enemyManager.clearEnemies();
+            userInterface.closePanels()
         }
     }
 
@@ -145,6 +146,9 @@ Scene {
                                         dungeonScene.createNextLevel();
                                         userInterface.closeRewards();
                                   }
+        onRequestPlayerStats: {
+            userInterface.showPlayerStatus(playerManager.playerStats());
+        }
     }
 
     function applyBlessing(id) {

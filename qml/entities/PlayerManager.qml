@@ -51,6 +51,14 @@ EntityManager {
         entityContainer.changeVisualEntityOrder();
     }
 
+    function playerStats() {
+        return [
+                {"name": "Damage","value":playerManager.damage},
+                {"name": "Revives","value":playerManager.reviveCount},
+                {"name": "Health on Kill","value":playerManager.additionalHealthOntKill},
+                {"name": "Berserk Damage","value":playerManager.berserkDamage()}]
+    }
+
     function playerActionToTile(row,column) { // returns {row, column} of next tile
         if(playerManager.isNeighboringTileToPlayer(row,column)) {
             if(tilemap.tiles[row][column].occupied) {
@@ -93,11 +101,7 @@ EntityManager {
 
 
     function attackEnemy(row,column) { // returns true if enemy has been killed and the player should move
-        let actualDamage = playerManager.damage;
-        if(berserkActive) {
-            const missingHP = playerManager.maxHealth - playerManager.currentHealth;
-            actualDamage += Math.floor(missingHP / 2) * playerManager.berserkIncreasedDamage;
-        }
+        const actualDamage = playerManager.damage + playerManager.berserkDamage();
         return enemyManager.attackEnemy(actualDamage,row,column);
     }
 
@@ -135,5 +139,13 @@ EntityManager {
         if(amount > 0) {
             playerManager.currentHealth = Math.min(playerManager.maxHealth,playerManager.currentHealth+amount);
         }
+    }
+
+    function berserkDamage() {
+        if(playerManager.berserkActive) {
+            const missingHP = playerManager.maxHealth - playerManager.currentHealth;
+            return Math.floor(missingHP / 2) * playerManager.berserkIncreasedDamage;
+        }
+        return 0;
     }
 }
