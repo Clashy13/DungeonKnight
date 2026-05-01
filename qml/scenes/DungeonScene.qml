@@ -24,7 +24,6 @@ Scene {
             playerManager.resetPlayerProperties();
             enemyManager.resetEnemyProperties();
             dungeonScene.createMap();
-            userInterface.showReward();
         } else {
             enemyManager.clearEnemies();
             userInterface.closePanels()
