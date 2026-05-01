@@ -15,7 +15,9 @@ Scene {
     onVisibleChanged: {
         if (visible) {
             playerManager.resetPlayerProperties();
+            enemyManager.resetEnemyProperties();
             dungeonScene.createMap();
+            userInterface.showReward();
         } else {
             enemyManager.clearEnemies();
         }
@@ -40,7 +42,7 @@ Scene {
                 continue;
             }
 
-            const enemiesSpawned = enemyManager.spawnEnemies(playerTileIndex,3);
+            const enemiesSpawned = enemyManager.spawnEnemies(playerTileIndex);
             if(!enemiesSpawned) {
                 continue;
             }
@@ -59,8 +61,7 @@ Scene {
             const playerTileIndex = playerManager.playerActionToTile(row,column);
             if(playerTileIndex !== null) {
                 if(dungeonScene.playerReadyforNextLevel()) {
-                    dungeonScene.createNextLevel();
-                    dungeonScene.currentDungeonLevel++;
+                    dungeonScene.openReward();
                 } else {
                     enemyManager.enemyActionsToTile(playerTileIndex.row,playerTileIndex.column);
                 }
@@ -73,12 +74,18 @@ Scene {
                && enemyManager.enemies.length === 0; // if all enemies are defeated
     }
 
-    function createNextLevel() {
+    function openReward() {
         var f = function() {
-            dungeonScene.createMap();
+            userInterface.showReward();
+            dungeonScene.resetOneRoundRewards();
             playerManager.player.finishedAnimation.disconnect(f);
         }
         playerManager.player.finishedAnimation.connect(f);
+    }
+
+    function createNextLevel() {
+        dungeonScene.currentDungeonLevel++;
+        dungeonScene.createMap();
     }
 
     Rectangle {
@@ -130,5 +137,66 @@ Scene {
         id: userInterface
         anchors.fill: parent
         currentDungeonLevel: dungeonScene.currentDungeonLevel
+        playerMaxHealth: playerManager.maxHealth
+        playerCurrentHealth: playerManager.currentHealth
+        onApplyCurseBlessingPair: (blessingId,curseId) => {
+                                        dungeonScene.applyBlessing(blessingId);
+                                        dungeonScene.applyCurse(curseId);
+                                        dungeonScene.createNextLevel();
+                                        userInterface.closeRewards();
+                                  }
+    }
+
+    function applyBlessing(id) {
+        switch(id) {
+        case "increase_damage":
+            playerManager.damage++;
+            break;
+        case "more_full_hp":
+            playerManager.maxHealth++;
+            break;
+        case "fully_heal":
+            playerManager.currentHealth = playerManager.maxHealth;
+            break;
+        case "berserk":
+            playerManager.berserkActive = true;
+            playerManager.berserkIncreasedDamage++;
+            break;
+        case "revive":
+            playerManager.reviveCount++;
+            break;
+        case "lifesteal":
+            playerManager.additionalHealthOntKill++;
+            break;
+        default:
+            throw new Error("no blessing id:",id)
+        }
+    }
+
+    function applyCurse(id) {
+        switch(id) {
+        case "increase_enemy_hp":
+            enemyManager.health++;
+            break;
+        case "increase_enemy_damage":
+            enemyManager.damage++;
+            break;
+        case "increase_enemy_count":
+            if(enemyManager.enemyCount < enemyManager.maxEnemyCount) {
+                enemyManager.enemyCount++;
+            }
+            break;
+        case "double_enemy_count_next_level":
+            if(enemyManager.enemyCount * 2 <= enemyManager.maxEnemyCount) {
+                enemyManager.enemyCountIsDoubled = true;
+            }
+            break;
+        default:
+            throw new Error("no curse id:",id)
+        }
+    }
+
+    function resetOneRoundRewards() {
+        enemyManager.enemyCountIsDoubled = false;
     }
 }

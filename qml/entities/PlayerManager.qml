@@ -7,6 +7,18 @@ EntityManager {
     property variant player
     property variant enemyManager
 
+    property int defaultHealth: 8
+    property int defaultDamage: 3
+
+    property int currentHealth: defaultHealth
+    property int maxHealth: defaultHealth
+    property int damage: defaultDamage
+
+    property int reviveCount: 0
+    property bool berserkActive: false
+    property int berserkIncreasedDamage: 0
+    property int additionalHealthOntKill: 0
+
     property bool animationRunning: false
 
     signal playerDied()
@@ -42,8 +54,9 @@ EntityManager {
     function playerActionToTile(row,column) { // returns {row, column} of next tile
         if(playerManager.isNeighboringTileToPlayer(row,column)) {
             if(tilemap.tiles[row][column].occupied) {
-                const moved = playerManager.attackEnemy(row,column)
-                if(moved) {
+                const killed = playerManager.attackEnemy(row,column)
+                if(killed) {
+                    playerManager.healAmount(playerManager.additionalHealthOntKill);
                     playerManager.movePlayerToTileIndex(row,column);
                     return {row: player.row,column: player.column};
                 } else {
@@ -80,7 +93,12 @@ EntityManager {
 
 
     function attackEnemy(row,column) { // returns true if enemy has been killed and the player should move
-        return enemyManager.attackEnemy(player.damage,row,column);
+        let actualDamage = playerManager.damage;
+        if(berserkActive) {
+            const missingHP = playerManager.maxHealth - playerManager.currentHealth;
+            actualDamage += Math.floor(missingHP / 2) * playerManager.berserkIncreasedDamage;
+        }
+        return enemyManager.attackEnemy(actualDamage,row,column);
     }
 
     function isNeighboringTileToPlayer(row,column) {
@@ -88,19 +106,34 @@ EntityManager {
     }
 
     function attackPlayer(damage) {
-        player.currentHealth -= damage;
-        if(player.currentHealth <= 0) {
-            playerManager.playerDied();
+        playerManager.currentHealth -= damage;
+        if(playerManager.currentHealth <= 0) {
+            if(playerManager.reviveCount > 0) {
+                playerManager.reviveCount--;
+                playerManager.currentHealth = playerManager.maxHealth;
+            } else {
+               playerManager.playerDied();
+            }
         }
     }
 
     function resetPlayerProperties() {
-        if(player !== undefined) {
-            player.currentHealth = player.maxHealth;
-        }
+        playerManager.currentHealth = playerManager.defaultHealth;
+        playerManager.maxHealth = playerManager.defaultHealth;
+        playerManager.damage = playerManager.defaultDamage;
+        playerManager.reviveCount = 0;
+        playerManager.berserkActive = false;
+        playerManager.berserkIncreasedDamage = 0;
+        playerManager.additionalHealthOntKill = 0;
     }
 
     function finishAnimation() {
         animationRunning = false;
+    }
+
+    function healAmount(amount) {
+        if(amount > 0) {
+            playerManager.currentHealth = Math.min(playerManager.maxHealth,playerManager.currentHealth+amount);
+        }
     }
 }

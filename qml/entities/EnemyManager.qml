@@ -7,11 +7,23 @@ EntityManager {
     property var enemies: []
     property int pendingAnimations: 0
 
+    property int defaultHealth: 5
+    property int defaultDamage: 1
+    property int defaultEnemyCount: 2
+    property int maxEnemyCount: 20
+
+    property int health: defaultHealth
+    property int damage: defaultDamage
+
+    property int enemyCount: defaultEnemyCount
+    property bool enemyCountIsDoubled: false
+
     signal attackPlayer(damage: int)
 
-    function spawnEnemies(playerTileIndex, count) {
+    function spawnEnemies(playerTileIndex) {
         const tileIndexes = []
-        for(let i = 0; i < count; i++) {
+        const actualEnemyCount = enemyManager.enemyCountIsDoubled ? enemyManager.enemyCount * 2: enemyManager.enemyCount;
+        for(let i = 0; i < actualEnemyCount; i++) {
             const tileIndex = enemyManager.possibleRandomTileIndex(playerTileIndex);
             if(tileIndex === null) {
                 return false;
@@ -33,7 +45,10 @@ EntityManager {
             column: tileIndex.column,
             imgSize: tilemap.tileSize,
             x: enemyPostion.x,
-            y: enemyPostion.y
+            y: enemyPostion.y,
+            currentHealth: enemyManager.health,
+            maxHealth: enemyManager.health,
+            damage: enemyManager.damage
         }
 
         const enemyId = enemyManager.createEntityFromUrlWithProperties(
@@ -141,5 +156,12 @@ EntityManager {
             enemies.length = 0;
             entityContainer.changeVisualEntityOrder();
         }
+    }
+
+    function resetEnemyProperties() {
+        enemyManager.health = enemyManager.defaultHealth;
+        enemyManager.damage = enemyManager.defaultDamage;
+        enemyManager.enemyCount = enemyManager.defaultEnemyCount;
+        enemyManager.enemyCountIsDoubled = false;
     }
 }
