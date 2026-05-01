@@ -118,7 +118,7 @@ Item {
         }
     }
 
-    function getRandomFreeTilePosition() {
+    function getRandomFreeTilePosition(preventTileIndexes) {
         if(!tilemap.freeTileExists()) {
             return null;
         }
@@ -126,7 +126,7 @@ Item {
         while(true) {
             const row = tilemap.randomNumberBetween(0,rows);
             const column = tilemap.randomNumberBetween(0,columns);
-            if(tilemap.tileIsFree(row,column)) {
+            if(!preventTileIndexes.some(tile => tile.row === row && tile.column === column) && tilemap.tileIsFree(row,column)) {
                 return {row,column};
             }
         }

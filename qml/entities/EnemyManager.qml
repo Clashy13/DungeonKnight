@@ -24,7 +24,7 @@ EntityManager {
         const tileIndexes = []
         const actualEnemyCount = enemyManager.enemyCountIsDoubled ? enemyManager.enemyCount * 2: enemyManager.enemyCount;
         for(let i = 0; i < actualEnemyCount; i++) {
-            const tileIndex = enemyManager.possibleRandomTileIndex(playerTileIndex);
+            const tileIndex = enemyManager.possibleRandomTileIndex(playerTileIndex,tileIndexes);
             if(tileIndex === null) {
                 return false;
             }
@@ -60,10 +60,10 @@ EntityManager {
         entityContainer.changeVisualEntityOrder();
     }
 
-    function possibleRandomTileIndex(playerTileIndex) {
+    function possibleRandomTileIndex(playerTileIndex, preventTileIndexes) {
         // try 5 times to get a valid position
         for(let i = 0; i < 5; i++) {
-            const tileIndex = tilemap.getRandomFreeTilePosition();
+            const tileIndex = tilemap.getRandomFreeTilePosition(preventTileIndexes);
             if(tileIndex === null) {
                 return null;
             }
