@@ -32,11 +32,6 @@ Item {
         playerStatus.visible = false;
     }
 
-    FontLoader {
-        id: pixelFont
-        source: "../../assets/PixelOperator8.ttf"
-    }
-
     Item {
         id: toprow
         anchors.top: parent.top
@@ -59,7 +54,7 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             text: "Level " + currentDungeonLevel
             color: "white"
-            font.family: pixelFont.name
+            font.family: "PixelOperator8"
             font.pixelSize: 12
         }
 

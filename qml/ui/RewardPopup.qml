@@ -25,11 +25,6 @@ Item {
         }
     }
 
-    FontLoader {
-        id: pixelFont
-        source: "../../assets/PixelOperator8.ttf"
-    }
-
     ListModel {
         id: rewardModel
     }
@@ -123,7 +118,7 @@ Item {
         anchors.margins: 20
         AppText {
             text: "Choose Blessing / Reward"
-            font.family: pixelFont.name
+            font.family: "PixelOperator8"
             Layout.alignment: Qt.AlignHCenter
             Layout.preferredHeight: 46
             font.pixelSize: 12
@@ -157,13 +152,13 @@ Item {
                             AppText {
                                 text: blessing.title
                                 color: "#4ADE80"
-                                font.family: pixelFont.name
+                                font.family: "PixelOperator8"
                                 font.pixelSize: 12
                             }
 
                             AppText {
                                 text: blessing.description
-                                font.family: pixelFont.name
+                                font.family: "PixelOperator8"
                                 color: "white"
                                 font.pixelSize: 8
                             }
@@ -183,14 +178,14 @@ Item {
                             AppText {
                                 text: curse.title
                                 color: "#EF4444"
-                                font.family: pixelFont.name
+                                font.family: "PixelOperator8"
                                 font.pixelSize: 12
                             }
 
                             AppText {
                                 text: curse.description
                                 color: "white"
-                                font.family: pixelFont.name
+                                font.family: "PixelOperator8"
                                 font.pixelSize: 8
                             }
                         }

@@ -32,11 +32,6 @@ Rectangle {
         return [];
     }
 
-    FontLoader {
-        id: pixelFont
-        source: "../../assets/PixelOperator8.ttf"
-    }
-
     MouseArea {
         anchors.fill: parent
         hoverEnabled: true
@@ -49,7 +44,7 @@ Rectangle {
 
         AppText {
             text: "Player Stats"
-            font.family: pixelFont.name
+            font.family: "PixelOperator8"
             font.pixelSize: 8
             color: "white"
         }
@@ -68,7 +63,7 @@ Rectangle {
                     model: playerStatus.playerStatNamesModel()
                     delegate: AppText {
                         text: modelData + ":"
-                        font.family: pixelFont.name
+                        font.family: "PixelOperator8"
                         font.pixelSize: 8
                         color: "white"
                     }
@@ -80,7 +75,7 @@ Rectangle {
                     model: playerStatus.playerStatValuesModel()
                     delegate: AppText {
                         text: modelData
-                        font.family: pixelFont.name
+                        font.family: "PixelOperator8"
                         font.pixelSize: 8
                         color: "white"
                     }

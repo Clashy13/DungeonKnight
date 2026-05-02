@@ -11,11 +11,6 @@ Rectangle {
 
     signal giveUp()
 
-    FontLoader {
-        id: pixelFont
-        source: "../../assets/PixelOperator8.ttf"
-    }
-
     MouseArea {
         anchors.fill: parent
         hoverEnabled: true
@@ -34,7 +29,7 @@ Rectangle {
             AppText {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "Give up?"
-                font.family: pixelFont.name
+                font.family: "PixelOperator8"
                 font.pixelSize: 16
                 color: "white"
             }
@@ -62,7 +57,7 @@ Rectangle {
                 Text {
                     anchors.centerIn: parent
                     text: "Cancel"
-                    font.family: pixelFont.name
+                    font.family: "PixelOperator8"
                     font.pixelSize: 14
                     color: "white"
                 }
@@ -88,7 +83,7 @@ Rectangle {
                 Text {
                     anchors.centerIn: parent
                     text: "Yes"
-                    font.family: pixelFont.name
+                    font.family: "PixelOperator8"
                     font.pixelSize: 14
                     color: "white"
                 }

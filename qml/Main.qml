@@ -18,6 +18,10 @@ GameWindow {
         scene.visible = true;
     }
 
+    FontLoader {
+        source: "../assets/PixelOperator8.ttf"
+    }
+
     MainMenuScene {
         id: mainMenuScene
         width: 320
