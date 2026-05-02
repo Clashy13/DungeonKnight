@@ -4,7 +4,7 @@ import Felgo
 
 Button {
     id: menuButton
-    font.family: pixelFont.name
+    font.family: "PixelOperator8"
     font.bold: true
     palette.buttonText: "white"
     font.pixelSize: 12
@@ -17,9 +17,4 @@ Button {
         border.color: menuButton.hovered ? "#606063" : "#404042"
     }
     onClicked: changeToDungeonScene()
-
-    FontLoader {
-        id: pixelFont
-        source: "../../assets/PixelOperator8.ttf"
-    }
 }

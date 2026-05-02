@@ -22,12 +22,7 @@ Rectangle {
         text: `${healthBar.value} / ${healthBar.max}`
         color: "white"
         font.pixelSize: 8
-        font.family: pixelFont.name
+        font.family: "PixelOperator8"
         font.bold: true
-    }
-
-    FontLoader {
-        id: pixelFont
-        source: "../../assets/PixelOperator8.ttf"
     }
 }

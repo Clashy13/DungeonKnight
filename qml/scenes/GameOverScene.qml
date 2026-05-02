@@ -20,11 +20,6 @@ Scene {
         }
     }
 
-    FontLoader {
-        id: pixelFont
-        source: "../../assets/PixelOperator8.ttf"
-    }
-
     Column {
         anchors.centerIn: parent
         spacing: 40
@@ -36,7 +31,7 @@ Scene {
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: "Game Over"
-                font.family: pixelFont.name
+                font.family: "PixelOperator8"
                 font.pixelSize: 30
                 color: "red"
             }
@@ -44,7 +39,7 @@ Scene {
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: "Score: Level " + gameOverScene.currentDungeonLevel
-                font.family: pixelFont.name
+                font.family: "PixelOperator8"
                 font.pixelSize: 16
                 color: "white"
             }

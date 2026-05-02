@@ -14,5 +14,4 @@ Item {
             children[sortedIndexes[i]].z = i;
         }
     }
-
 }

@@ -12,31 +12,6 @@ Rectangle {
 
     property var playerStats
 
-    function show(playerStats) {
-        playerStatus.playerStats = playerStats;
-        visible = true;
-    }
-
-    function playerStatNamesModel() {
-        if(playerStatus.playerStats !== undefined) {
-            return playerStatus.playerStats.map(stat => stat.name);
-        }
-        return [];
-
-    }
-
-    function playerStatValuesModel() {
-        if(playerStatus.playerStats !== undefined) {
-            return playerStatus.playerStats.map(stat => stat.value);
-        }
-        return [];
-    }
-
-    FontLoader {
-        id: pixelFont
-        source: "../../assets/PixelOperator8.ttf"
-    }
-
     MouseArea {
         anchors.fill: parent
         hoverEnabled: true
@@ -49,7 +24,7 @@ Rectangle {
 
         AppText {
             text: "Player Stats"
-            font.family: pixelFont.name
+            font.family: "PixelOperator8"
             font.pixelSize: 8
             color: "white"
         }
@@ -68,7 +43,7 @@ Rectangle {
                     model: playerStatus.playerStatNamesModel()
                     delegate: AppText {
                         text: modelData + ":"
-                        font.family: pixelFont.name
+                        font.family: "PixelOperator8"
                         font.pixelSize: 8
                         color: "white"
                     }
@@ -80,12 +55,32 @@ Rectangle {
                     model: playerStatus.playerStatValuesModel()
                     delegate: AppText {
                         text: modelData
-                        font.family: pixelFont.name
+                        font.family: "PixelOperator8"
                         font.pixelSize: 8
                         color: "white"
                     }
                 }
             }
         }
+    }
+
+    function show(playerStats) {
+        playerStatus.playerStats = playerStats;
+        visible = true;
+    }
+
+    function playerStatNamesModel() {
+        if(playerStatus.playerStats !== undefined) {
+            return playerStatus.playerStats.map(stat => stat.name);
+        }
+        return [];
+
+    }
+
+    function playerStatValuesModel() {
+        if(playerStatus.playerStats !== undefined) {
+            return playerStatus.playerStats.map(stat => stat.value);
+        }
+        return [];
     }
 }

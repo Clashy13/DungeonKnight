@@ -10,12 +10,8 @@ GameWindow {
     screenWidth: 640
     screenHeight: 960
 
-    function changeScene(scene) {
-        gameWindow.activeScene = scene;
-        mainMenuScene.visible = false;
-        dungeonScene.visible = false;
-        gameOverScene.visible = false;
-        scene.visible = true;
+    FontLoader {
+        source: "../assets/PixelOperator8.ttf"
     }
 
     MainMenuScene {
@@ -41,5 +37,13 @@ GameWindow {
         width: 320
         height: 480
         onPlayerDied: gameWindow.changeScene(gameOverScene)
+    }
+
+    function changeScene(scene) {
+        gameWindow.activeScene = scene;
+        mainMenuScene.visible = false;
+        dungeonScene.visible = false;
+        gameOverScene.visible = false;
+        scene.visible = true;
     }
 }

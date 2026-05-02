@@ -15,19 +15,104 @@ Item {
         rewardPopup.visible = true;
     }
 
-    function fillRewardModel() {
-        const blessings = rewardPopup.pickRandomModelElements(blessingModel,rewardPopup.count);
-        const curses = rewardPopup.pickRandomModelElements(curseModel,rewardPopup.count);
-
-        rewardModel.clear();
-        for(let i = 0; i < rewardPopup.count; i++) {
-            rewardModel.append({blessing: blessings[i], curse: curses[i]});
-        }
+    Rectangle {
+        id: background
+        anchors.fill: parent
+        color: Qt.rgba(0,0,0,0.7)
     }
 
-    FontLoader {
-        id: pixelFont
-        source: "../../assets/PixelOperator8.ttf"
+    MouseArea {
+        anchors.fill: parent
+        hoverEnabled: true
+    }
+
+    ColumnLayout {
+        anchors.fill: parent
+        anchors.margins: 20
+        AppText {
+            text: "Choose Blessing / Reward"
+            font.family: "PixelOperator8"
+            Layout.alignment: Qt.AlignHCenter
+            Layout.preferredHeight: 46
+            font.pixelSize: 12
+            color: "white"
+        }
+
+        ColumnLayout {
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+            spacing: 6
+
+            Repeater {
+                model: rewardModel
+                delegate: Rectangle {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    color: mouseArea.containsMouse ? "#505050" : "#303030"
+                    border.width: 2
+                    border.color: mouseArea.containsMouse ? "#707070" : "#505050"
+
+                    ColumnLayout {
+                        anchors.fill: parent
+                        spacing: 10
+                        anchors.margins: 10
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            spacing: 12
+
+                            AppText {
+                                text: blessing.title
+                                color: "#4ADE80"
+                                font.family: "PixelOperator8"
+                                font.pixelSize: 12
+                            }
+
+                            AppText {
+                                text: blessing.description
+                                font.family: "PixelOperator8"
+                                color: "white"
+                                font.pixelSize: 8
+                            }
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 2
+                            color: "#606060"
+                        }
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            spacing: 12
+
+                            AppText {
+                                text: curse.title
+                                color: "#EF4444"
+                                font.family: "PixelOperator8"
+                                font.pixelSize: 12
+                            }
+
+                            AppText {
+                                text: curse.description
+                                color: "white"
+                                font.family: "PixelOperator8"
+                                font.pixelSize: 8
+                            }
+                        }
+                    }
+
+                    MouseArea {
+                        id: mouseArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onClicked: rewardPopup.applyCurseBlessingPair(blessing.identifier,curse.identifier)
+                    }
+                }
+            }
+        }
     }
 
     ListModel {
@@ -92,6 +177,16 @@ Item {
         }
     }
 
+    function fillRewardModel() {
+        const blessings = rewardPopup.pickRandomModelElements(blessingModel,rewardPopup.count);
+        const curses = rewardPopup.pickRandomModelElements(curseModel,rewardPopup.count);
+
+        rewardModel.clear();
+        for(let i = 0; i < rewardPopup.count; i++) {
+            rewardModel.append({blessing: blessings[i], curse: curses[i]});
+        }
+    }
+
     function pickRandomModelElements(model, count) {
         const indexes = [];
         while (indexes.length < count && indexes.length < model.count) {
@@ -106,107 +201,4 @@ Item {
         }
         return result;
     }
-
-    Rectangle {
-        id: background
-        anchors.fill: parent
-        color: Qt.rgba(0,0,0,0.7)
-    }
-
-    MouseArea {
-        anchors.fill: parent
-        hoverEnabled: true
-    }
-
-    ColumnLayout {
-        anchors.fill: parent
-        anchors.margins: 20
-        AppText {
-            text: "Choose Blessing / Reward"
-            font.family: pixelFont.name
-            Layout.alignment: Qt.AlignHCenter
-            Layout.preferredHeight: 46
-            font.pixelSize: 12
-            color: "white"
-        }
-
-        ColumnLayout {
-            Layout.fillHeight: true
-            Layout.fillWidth: true
-            spacing: 6
-
-            Repeater {
-                model: rewardModel
-                delegate: Rectangle {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    color: mouseArea.containsMouse ? "#505050" : "#303030"
-                    border.width: 2
-                    border.color: mouseArea.containsMouse ? "#707070" : "#505050"
-
-                    ColumnLayout {
-                        anchors.fill: parent
-                        spacing: 10
-                        anchors.margins: 10
-
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            spacing: 12
-
-                            AppText {
-                                text: blessing.title
-                                color: "#4ADE80"
-                                font.family: pixelFont.name
-                                font.pixelSize: 12
-                            }
-
-                            AppText {
-                                text: blessing.description
-                                font.family: pixelFont.name
-                                color: "white"
-                                font.pixelSize: 8
-                            }
-                        }
-
-                        Rectangle {
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: 2
-                            color: "#606060"
-                        }
-
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            spacing: 12
-
-                            AppText {
-                                text: curse.title
-                                color: "#EF4444"
-                                font.family: pixelFont.name
-                                font.pixelSize: 12
-                            }
-
-                            AppText {
-                                text: curse.description
-                                color: "white"
-                                font.family: pixelFont.name
-                                font.pixelSize: 8
-                            }
-                        }
-                    }
-
-                    MouseArea {
-                        id: mouseArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onClicked: rewardPopup.applyCurseBlessingPair(blessing.identifier,curse.identifier)
-                    }
-
-                }
-            }
-        }
-
-    }
-
 }

@@ -9,11 +9,6 @@ Scene {
     id: mainMenuScene
     signal changeToDungeonScene()
 
-    FontLoader {
-        id: pixelFont
-        source: "../../assets/PixelOperator8.ttf"
-    }
-
     Rectangle {
         anchors.fill: parent
 
