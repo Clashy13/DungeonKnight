@@ -21,6 +21,7 @@ Scene {
 
     onVisibleChanged: {
         if (visible) {
+            dungeonScene.currentDungeonLevel = 1
             playerManager.resetPlayerProperties();
             enemyManager.resetEnemyProperties();
             dungeonScene.createMap();
