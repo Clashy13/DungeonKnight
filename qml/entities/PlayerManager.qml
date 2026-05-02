@@ -61,16 +61,23 @@ EntityManager {
 
     function playerActionToTile(row,column) { // returns {row, column} of next tile
         playerManager.targetTileIndex = {row:row,column:column};
+        if(player.row === row && player.column === column) {
+            playerManager.finishedTurn();
+            return {row,column: column};
+        }
+
         if(playerManager.isNeighboringTileToPlayer(row,column)) {
             if(tilemap.tiles[row][column].occupied) {
                 const killed = playerManager.attackEnemy(row,column)
                 if(killed) {
                     playerManager.healAmount(playerManager.additionalHealthOntKill);
-                    playerManager.movePlayerToTileIndex(row,column);
+                    playerManager.movePlayerToTileIndex(row,column,true);
                     playerManager.finishTurnAfterAnimation();
                     return {row: player.row,column: player.column};
                 } else {
-                    playerManager.finishedTurn();
+                    const position = tilemap.tileIndexToPosition(row,column);
+                    player.attack(position.x,position.y,player.attackSpeed);
+                    playerManager.finishTurnAfterAnimation();
                     return {row: player.row,column: player.column}
                 }
             } else {
@@ -80,7 +87,6 @@ EntityManager {
             }
         }
         const tileIndex = movePlayerTowards(row,column);
-        playerManager.finishTurnAfterAnimation();
         return tileIndex;
     }
 
@@ -99,6 +105,7 @@ EntityManager {
             const nextTileIndex = tilemap.nextStepOnPath({row: player.row, column: player.column},{row,column}, true);
             if(nextTileIndex !== null && player !== undefined) {
                 playerManager.movePlayerToTileIndex(nextTileIndex.row,nextTileIndex.column);
+                playerManager.finishTurnAfterAnimation();
                 return nextTileIndex;
             }
             return null;
@@ -122,12 +129,13 @@ EntityManager {
 
     function movePlayerAlongPath(path, index, targetrow, targetColumn) {
         if(playerManager.targetTileChanged(targetrow,targetColumn)) {
+            player.continousAnimation = false;
             return;
         }
-
+        player.continousAnimation = true;
         const {row,column} = path[index].tile;
         const {x,y} = path[index].position;
-        player.moveTo(x,y);
+        player.moveTo(x,y,player.walkSpeed);
 
         const f = () => {
             tilemap.changeEntityTileOccupation(player.row,player.column,row,column);
@@ -136,7 +144,10 @@ EntityManager {
             if(index + 1 < path.length) {
                 playerManager.movePlayerAlongPath(path, index + 1, targetrow, targetColumn);
             }
-            playerManager.finishTurnAfterAnimation();
+            else {
+                player.continousAnimation = false;
+            }
+            playerManager.finishedTurn();
             player.finshedPartAnimation.disconnect(f);
         }
         player.finshedPartAnimation.connect(f);
@@ -146,13 +157,14 @@ EntityManager {
         return row !== playerManager.targetTileIndex.row || column !== playerManager.targetTileIndex.column;
     }
 
-    function movePlayerToTileIndex(row,column) {
+    function movePlayerToTileIndex(row,column, kill) {
         if(player !== undefined) {
             const playerPostion = tilemap.tileIndexToPosition(row,column);
             tilemap.changeEntityTileOccupation(player.row,player.column,row,column);
             player.row = row;
             player.column = column;
-            player.moveTo(playerPostion.x,playerPostion.y);
+            const speed = kill ? player.attackSpeed : player.walkSpeed
+            player.moveTo(playerPostion.x,playerPostion.y,speed);
             entityContainer.changeVisualEntityOrder();
         }
     }

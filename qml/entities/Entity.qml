@@ -8,6 +8,10 @@ EntityBase {
     property int column // of tile
     property string imgSrc // has to be squared for right image sizing
     property int imgSize
+    property int walkSpeed: 5
+    property int attackSpeed: 8
+
+    property bool continousAnimation: false
 
     property int moveDuration
     signal finishedAnimation()
@@ -22,18 +26,35 @@ EntityBase {
         source: entity.imgSrc
     }
 
-    function moveTo(targetX, targetY) {
+    function moveTo(targetX, targetY, speed) {
         var dx = targetX - x
         var dy = targetY - y
         var distance = Math.sqrt(dx*dx + dy*dy)
 
-        const speed = entity.imgSize * 4
-        moveDuration = distance / speed * 1000
+        moveDuration = distance / (entity.imgSize * speed) * 1000
 
         moveAnim.animations[0].to = targetX
         moveAnim.animations[1].to = targetY
 
         moveAnim.start();
+    }
+
+    function attack(targetX, targetY) {
+        entity.continousAnimation = true;
+        const currentX = entity.x;
+        const currentY = entity.y;
+
+        const xInBetween =  currentX + (targetX - currentX) * 0.65;
+        const yInBetween =  currentY + (targetY - currentY) * 0.65;
+
+        entity.moveTo(xInBetween,yInBetween,entity.attackSpeed);
+
+        const f = () => {
+            entity.moveTo(currentX,currentY,entity.attackSpeed);
+            entity.continousAnimation = false;
+            entity.finshedPartAnimation.disconnect(f);
+        }
+        entity.finshedPartAnimation.connect(f);
     }
 
     ParallelAnimation {
@@ -54,8 +75,11 @@ EntityBase {
         }
 
         onFinished: {
-            entity.finshedPartAnimation();
-            entity.finishedAnimation();
+            if(entity.continousAnimation) {
+                entity.finshedPartAnimation();
+            } else {
+                entity.finishedAnimation();
+            }
         }
     }
 }
