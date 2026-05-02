@@ -136,9 +136,7 @@ Scene {
             tilemap: tilemap
             enemyManager: enemyManager
             onPlayerDied: dungeonScene.playerDied()
-            onFinishedTurn: {
-                dungeonScene.doActionsAfterPlayerTurn();
-            }
+            onFinishedTurn: dungeonScene.doActionsAfterPlayerTurn();
         }
     }
 

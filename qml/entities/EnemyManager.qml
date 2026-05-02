@@ -88,6 +88,9 @@ EntityManager {
 
     function enemyActionToTile(enemy,row,column) {
         if(enemyManager.isNeighboringTile(enemy,row,column)) {
+            const position = tilemap.tileIndexToPosition(row,column);
+            enemyManager.pendingAnimations++;
+            enemy.attack(position.x,position.y,enemy.attackSpeed);
             enemyManager.attackPlayer(enemy.damage);
         } else {
             enemyManager.moveEnemyTowards(enemy,row,column);
@@ -113,7 +116,7 @@ EntityManager {
         enemy.row = row;
         enemy.column = column;
         pendingAnimations++;
-        enemy.moveTo(enemyPostion.x,enemyPostion.y);
+        enemy.moveTo(enemyPostion.x,enemyPostion.y,enemy.walkSpeed);
         entityContainer.changeVisualEntityOrder();
     }
 
