@@ -12,6 +12,7 @@ Item {
 
     signal applyCurseBlessingPair(blessingId: string, curseId: string)
     signal requestPlayerStats()
+    signal giveUp()
 
     anchors.margins: 12
 
@@ -62,35 +63,72 @@ Item {
             font.pixelSize: 12
         }
 
-        MouseArea {
-            id: playerStatusButton
+        Row {
             anchors.top: parent.top
             anchors.right: parent.right
-            width: parent.height
             height: parent.height
-            onClicked: playerStatus.visible ? playerStatus.visible = false : userInterface.requestPlayerStats()
-            Rectangle {
-                anchors.fill: parent
-                color: "#505050"
-                border.width: 1
-                border.color: "#707070"
+            spacing: 6
+
+            MouseArea {
+                id: playerStatusButton
+                width: parent.height
+                height: parent.height
+                onClicked: playerStatus.visible ? playerStatus.visible = false : userInterface.requestPlayerStats()
+
+                Rectangle {
+                    anchors.fill: parent
+                    color: "#505050"
+                    border.width: 1
+                    border.color: "#707070"
+                }
+
+                Image {
+                    anchors.centerIn: parent
+                    width: parent.width * 0.8
+                    height: parent.height * 0.8
+                    smooth: false
+                    source: "../../assets/knight.png"
+                }
+
+                PlayerStatus {
+                    id: playerStatus
+                    visible: false
+                    anchors.top: parent.bottom
+                    anchors.right: parent.right
+                }
             }
 
-            Image {
-                anchors.centerIn: parent
-                width: parent.width * 0.8
-                height: parent.height * 0.8
-                smooth: false
-                source: "../../assets/knight.png"
-            }
+            MouseArea {
+                id: giveUpButton
+                width: parent.height
+                height: parent.height
+                onClicked: giveUpMenu.visible = true
 
-            PlayerStatus {
-                id: playerStatus
-                visible: false
-                anchors.top: parent.bottom
-                anchors.right: parent.right
+                Rectangle {
+                    anchors.fill: parent
+                    color: "#505050"
+                    border.width: 1
+                    border.color: "#707070"
+                }
+
+                Image {
+                    anchors.centerIn: parent
+                    width: parent.width * 0.6
+                    height: parent.height * 0.6
+                    smooth: false
+                    source: "../../assets/skull.png"
+                }
             }
         }
+    }
+
+    GiveUpMenu {
+        id: giveUpMenu
+        visible: false
+        anchors.centerIn: parent
+        width: 200
+        height: 100
+        onGiveUp: userInterface.giveUp()
     }
 
     RewardPopup {

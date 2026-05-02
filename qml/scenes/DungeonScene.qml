@@ -157,6 +157,7 @@ Scene {
         onRequestPlayerStats: {
             userInterface.showPlayerStatus(playerManager.playerStats());
         }
+        onGiveUp: dungeonScene.playerDied()
     }
 
     function applyBlessing(id) {
