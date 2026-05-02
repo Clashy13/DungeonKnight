@@ -30,65 +30,6 @@ Scene {
         }
     }
 
-    function createMap() {
-        const rows = 11;
-        const columns = 7;
-
-        const playerTileIndex = {row: rows - 2,column: Math.floor(columns/2)};
-        const stairsTileIndex = {row: 1, column: playerTileIndex.column};
-
-        // try 20 times to get a valid setup
-        let successful = false;
-        for(let i = 0; i < 20; i++) {
-            enemyManager.clearEnemies();
-
-            tilemap.reshapeMap(rows, columns,playerTileIndex,stairsTileIndex);
-
-            playerManager.spawnPlayer(playerTileIndex.row,playerTileIndex.column);
-            if(!tilemap.isPathPossible(playerTileIndex,stairsTileIndex)) {
-                continue;
-            }
-
-            const enemiesSpawned = enemyManager.spawnEnemies(playerTileIndex);
-            if(!enemiesSpawned) {
-                continue;
-            }
-
-            successful = true;
-            break;
-        }
-
-        if(!successful) {
-            throw new Error("cannot create map");
-        }
-    }
-
-    function doPlayerActionToTile(row,column) {
-        dungeonScene.turn = DungeonScene.Player;
-        const playerTileIndex = playerManager.playerActionToTile(row,column);
-    }
-
-    function playerReadyforNextLevel() {
-        return playerManager.player !== undefined && playerManager.player.row === tilemap.stairsPosition.row && playerManager.player.column === tilemap.stairsPosition.column // if player on stairs
-               && enemyManager.enemies.length === 0; // if all enemies are defeated
-    }
-
-    function doActionsAfterPlayerTurn(playerTileIndex) {
-        if(dungeonScene.playerReadyforNextLevel()) {
-            dungeonScene.turn = DungeonScene.Paused;
-            userInterface.showReward();
-            dungeonScene.resetOneRoundRewards();
-        } else {
-            dungeonScene.turn = DungeonScene.Enemies;
-            enemyManager.enemyActionsToTile(playerManager.player.row,playerManager.player.column);
-        }
-    }
-
-    function createNextLevel() {
-        dungeonScene.currentDungeonLevel++;
-        dungeonScene.createMap();
-    }
-
     Rectangle {
         id: background
         anchors.fill: parent
@@ -156,6 +97,65 @@ Scene {
             userInterface.showPlayerStatus(playerManager.playerStats());
         }
         onGiveUp: dungeonScene.playerDied()
+    }
+
+    function createMap() {
+        const rows = 11;
+        const columns = 7;
+
+        const playerTileIndex = {row: rows - 2,column: Math.floor(columns/2)};
+        const stairsTileIndex = {row: 1, column: playerTileIndex.column};
+
+        // try 20 times to get a valid setup
+        let successful = false;
+        for(let i = 0; i < 20; i++) {
+            enemyManager.clearEnemies();
+
+            tilemap.reshapeMap(rows, columns,playerTileIndex,stairsTileIndex);
+
+            playerManager.spawnPlayer(playerTileIndex.row,playerTileIndex.column);
+            if(!tilemap.isPathPossible(playerTileIndex,stairsTileIndex)) {
+                continue;
+            }
+
+            const enemiesSpawned = enemyManager.spawnEnemies(playerTileIndex);
+            if(!enemiesSpawned) {
+                continue;
+            }
+
+            successful = true;
+            break;
+        }
+
+        if(!successful) {
+            throw new Error("cannot create map");
+        }
+    }
+
+    function doPlayerActionToTile(row,column) {
+        dungeonScene.turn = DungeonScene.Player;
+        const playerTileIndex = playerManager.playerActionToTile(row,column);
+    }
+
+    function playerReadyforNextLevel() {
+        return playerManager.player !== undefined && playerManager.player.row === tilemap.stairsPosition.row && playerManager.player.column === tilemap.stairsPosition.column // if player on stairs
+               && enemyManager.enemies.length === 0; // if all enemies are defeated
+    }
+
+    function doActionsAfterPlayerTurn(playerTileIndex) {
+        if(dungeonScene.playerReadyforNextLevel()) {
+            dungeonScene.turn = DungeonScene.Paused;
+            userInterface.showReward();
+            dungeonScene.resetOneRoundRewards();
+        } else {
+            dungeonScene.turn = DungeonScene.Enemies;
+            enemyManager.enemyActionsToTile(playerManager.player.row,playerManager.player.column);
+        }
+    }
+
+    function createNextLevel() {
+        dungeonScene.currentDungeonLevel++;
+        dungeonScene.createMap();
     }
 
     function applyBlessing(id) {

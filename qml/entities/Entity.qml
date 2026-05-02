@@ -26,6 +26,32 @@ EntityBase {
         source: entity.imgSrc
     }
 
+    ParallelAnimation {
+        id: moveAnim
+
+        NumberAnimation {
+            target: entity
+            property: "x"
+            duration: moveDuration
+            easing.type: Easing.Linear
+        }
+
+        NumberAnimation {
+            target: entity
+            property: "y"
+            duration: moveDuration
+            easing.type: Easing.Linear
+        }
+
+        onFinished: {
+            if(entity.continousAnimation) {
+                entity.finshedPartAnimation();
+            } else {
+                entity.finishedAnimation();
+            }
+        }
+    }
+
     function moveTo(targetX, targetY, speed) {
         var dx = targetX - x
         var dy = targetY - y
@@ -55,31 +81,5 @@ EntityBase {
             entity.finshedPartAnimation.disconnect(f);
         }
         entity.finshedPartAnimation.connect(f);
-    }
-
-    ParallelAnimation {
-        id: moveAnim
-
-        NumberAnimation {
-            target: entity
-            property: "x"
-            duration: moveDuration
-            easing.type: Easing.Linear
-        }
-
-        NumberAnimation {
-            target: entity
-            property: "y"
-            duration: moveDuration
-            easing.type: Easing.Linear
-        }
-
-        onFinished: {
-            if(entity.continousAnimation) {
-                entity.finshedPartAnimation();
-            } else {
-                entity.finishedAnimation();
-            }
-        }
     }
 }

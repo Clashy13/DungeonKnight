@@ -12,26 +12,6 @@ Rectangle {
 
     property var playerStats
 
-    function show(playerStats) {
-        playerStatus.playerStats = playerStats;
-        visible = true;
-    }
-
-    function playerStatNamesModel() {
-        if(playerStatus.playerStats !== undefined) {
-            return playerStatus.playerStats.map(stat => stat.name);
-        }
-        return [];
-
-    }
-
-    function playerStatValuesModel() {
-        if(playerStatus.playerStats !== undefined) {
-            return playerStatus.playerStats.map(stat => stat.value);
-        }
-        return [];
-    }
-
     MouseArea {
         anchors.fill: parent
         hoverEnabled: true
@@ -82,5 +62,25 @@ Rectangle {
                 }
             }
         }
+    }
+
+    function show(playerStats) {
+        playerStatus.playerStats = playerStats;
+        visible = true;
+    }
+
+    function playerStatNamesModel() {
+        if(playerStatus.playerStats !== undefined) {
+            return playerStatus.playerStats.map(stat => stat.name);
+        }
+        return [];
+
+    }
+
+    function playerStatValuesModel() {
+        if(playerStatus.playerStats !== undefined) {
+            return playerStatus.playerStats.map(stat => stat.value);
+        }
+        return [];
     }
 }
