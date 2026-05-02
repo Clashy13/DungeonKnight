@@ -28,8 +28,11 @@ GameWindow {
     GameOverScene {
         id: gameOverScene
         visible: false
+        width: 320
+        height: 480
         onChangeToDungeonScene: gameWindow.changeScene(dungeonScene)
         onChangeToMainMenuScene: gameWindow.changeScene(mainMenuScene)
+        currentDungeonLevel: dungeonScene.currentDungeonLevel
     }
 
     DungeonScene {
