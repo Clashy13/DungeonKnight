@@ -3,6 +3,7 @@
 <INDEX url="" title="DungeonKnight Tutorial" version="" project="DungeonKnight">
     <namespace name="" status="active" access="public" module="dungeonknight">
         <page name="index.html" href="index.html" status="active" location="main.qdoc" filepath="/home/mintuser/Desktop/Felgo-Projects/DungeonKnight/Tutorial/main.qdoc" lineno="1" documented="true" subtype="page" title="DungeonKnight Tutorial" fulltitle="DungeonKnight Tutorial" subtitle="">
+            <contents name="table-of-contents" title="Table of Contents" level="1"/>
             <contents name="introduction" title="Introduction" level="1"/>
             <contents name="ressources" title="Ressources" level="1"/>
             <contents name="the-project" title="The Project" level="1"/>
