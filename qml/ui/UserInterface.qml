@@ -7,8 +7,6 @@ Item {
     property int currentDungeonLevel
     property int playerMaxHealth
     property int playerCurrentHealth
-    width: implicitWidth + 20
-    height: implicitHeight + 20
 
     signal applyCurseBlessingPair(blessingId: string, curseId: string)
     signal requestPlayerStats()
@@ -130,6 +128,6 @@ Item {
         id: rewardPopup
         anchors.fill: parent
         visible: false
-        onApplyCurseBlessingPair: (blessingId,curseId) => userInterface.applyCurseBlessingPair(blessingId,curseId)
+        onApplyCurseBlessingPair: (blessingId, curseId) => userInterface.applyCurseBlessingPair(blessingId, curseId)
     }
 }
