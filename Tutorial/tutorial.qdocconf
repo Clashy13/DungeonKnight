@@ -1,0 +1,20 @@
+project = DungeonKnight
+description = DungeonKnight Tutorial
+outputdir = html
+
+moduleheader =
+
+sourcedirs = ..
+headerdirs = ..
+imagedirs = Images
+
+sources = main.qdoc
+
+exampledirs = ../qml ../qml/ui ../qml/scenes ../qml/tilemap ../qml/entities
+
+outputformats = HTML
+
+navigation = true
+
+HTML.stylesheets = style.css
+HTML.headerstyles = "<link rel=\"stylesheet\" type=\"text/css\" href=\"style/style.css\" />\n"

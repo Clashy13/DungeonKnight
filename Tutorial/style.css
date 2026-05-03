@@ -1,0 +1,100 @@
+/* QDoc Documentation Stylesheet */
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #fff;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: #004a80;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+    margin-top: 30px;
+}
+
+h1 {
+    font-size: 2.5em;
+    border-bottom: 2px solid #004a80;
+}
+
+a {
+    color: #0073cc;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+code {
+    background-color: #f4f4f4;
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9em;
+}
+
+pre {
+    background-color: #f4f4f4;
+    padding: 15px;
+    border-radius: 5px;
+    overflow-x: auto;
+    border: 1px solid #ddd;
+}
+
+.brief {
+    font-size: 1.2em;
+    color: #666;
+    margin-bottom: 20px;
+    font-style: italic;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+th,
+td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+}
+
+th {
+    background-color: #f8f8f8;
+    color: #333;
+}
+
+.footer {
+    margin-top: 50px;
+    border-top: 1px solid #eee;
+    padding-top: 10px;
+    font-size: 0.8em;
+    color: #999;
+    text-align: center;
+}
+
+/* Specific QDoc classes */
+.qmltype {
+    font-weight: bold;
+    color: #d35400;
+}
+
+.qmlproto {
+    background-color: #fdf2e9;
+    padding: 10px;
+    border-left: 5px solid #e67e22;
+    margin: 10px 0;
+}

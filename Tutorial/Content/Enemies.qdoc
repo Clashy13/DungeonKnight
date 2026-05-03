@@ -1,0 +1,352 @@
+\section1 Enemies
+
+\section3 Enemy
+
+Now to also have enemies in the scene we first create an \c Enemy class, just like the \c Player. \br
+\c entities/Enemy.qml
+\code
+import QtQuick
+import Felgo
+
+Entity {
+    id: enemy
+    entityType: "enemy"
+    imgSrc: "../../assets/skeleton.png"
+}
+\endcode
+\br
+
+\section3 Additional Functions in the Tilemap
+
+To enable enemies on the \c Tilemap we first need a few more functions to get a free \c Tile. \br
+\c tilemap/TileMap.qml
+\code
+Item {
+    id: tilemap
+
+    ...
+
+    function getRandomFreeTilePosition(preventTileIndexes) {
+        if(!tilemap.freeTileExists()) {
+            return null;
+        }
+
+        while(true) {
+            const row = tilemap.randomNumberBetween(0,rows);
+            const column = tilemap.randomNumberBetween(0,columns);
+            if(!preventTileIndexes.some(tile => tile.row === row && tile.column === column) && tilemap.tileIsFree(row,column)) {
+                return {row,column};
+            }
+        }
+    }
+
+    function randomNumberBetween(min,max) {
+        return Math.floor(Math.random() * (max - min + 1) + min);
+    }
+
+    function freeTileExists() {
+        for(let row = 0; row < tilemap.rows; row++) {
+            for(let col = 0; col < tilemap.columns; col++) {
+                if(tilemap.tileIsFree(row,col)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+}
+\endcode
+
+\section3 EnemyManager
+
+To manage these enemies we need an \c EnemyManager. \br
+It will handle the spawning and moving of the enemies.\br
+The enemies are following the \c Player and will use the same pathfinding functions for that.\br
+\c enemies/EnemyManager.qml
+\code
+import QtQuick
+import Felgo
+
+EntityManager {
+    id: enemyManager
+    property variant tilemap
+    property var enemies: []
+    property int pendingAnimations: 0
+
+    property int defaultEnemyCount: 2
+    property int maxEnemyCount: 20
+
+    property int enemyCount: defaultEnemyCount
+
+    signal finishedTurn()
+
+    function spawnEnemies(playerTileIndex) {
+        const tileIndexes = []
+        for(let i = 0; i < enemyManager.enemyCount; i++) {
+            const tileIndex = enemyManager.possibleRandomTileIndex(playerTileIndex,tileIndexes);
+            if(tileIndex === null) {
+                return false;
+            }
+            tileIndexes.push(tileIndex);
+        }
+
+        for(let j = 0; j < tileIndexes.length; j++) {
+            enemyManager.spawnEnemy(playerTileIndex, tileIndexes[j]);
+        }
+        return true;
+    }
+
+    function spawnEnemy(playerTileIndex, tileIndex) {
+        const enemyPostion = tilemap.tileIndexToPosition(tileIndex.row,tileIndex.column);
+        tilemap.setEntityTileOccupation(tileIndex.row,tileIndex.column);
+        var newEntityProperties = {
+            row: tileIndex.row,
+            column: tileIndex.column,
+            imgSize: tilemap.tileSize,
+            x: enemyPostion.x,
+            y: enemyPostion.y
+        }
+
+        const enemyId = enemyManager.createEntityFromUrlWithProperties(
+                                    Qt.resolvedUrl("Enemy.qml"),
+                                    newEntityProperties);
+        const enemy = getLastAddedEntity();
+        enemy.finishedAnimation.connect(enemyAnimationDone);
+        enemies.push({id: enemyId, enemy: enemy})
+        entityContainer.changeVisualEntityOrder();
+    }
+
+    function possibleRandomTileIndex(playerTileIndex, preventTileIndexes) {
+        // try 5 times to get a valid position
+        for(let i = 0; i < 5; i++) {
+            const tileIndex = tilemap.getRandomFreeTilePosition(preventTileIndexes);
+            if(tileIndex === null) {
+                return null;
+            }
+
+            // check if there is a possible path to the player
+            if(tilemap.isPathPossible(tileIndex,playerTileIndex,true)) {
+                return tileIndex;
+            }
+        }
+        return null;
+    }
+
+    function enemyActionsToTile(row,column) {
+        for (var i = 0; i < enemies.length; i++) {
+            enemyManager.enemyActionToTile(enemies[i].enemy,row,column);
+        }
+        if(enemyManager.pendingAnimations === 0) {
+            enemyManager.finishedTurn();
+        }
+    }
+
+    function enemyActionToTile(enemy,row,column) {
+        enemyManager.moveEnemyTowards(enemy,row,column);
+    }
+
+    function moveEnemyTowards(enemy,row,column) {
+        if(!enemyManager.isNeighboringTile(enemy,row,column)) {
+            const nextTileIndex = tilemap.nextStepOnPath({row: enemy.row, column: enemy.column},{row,column},true);
+            if(nextTileIndex !== null) {
+                moveEnemyToTileIndex(enemy,nextTileIndex.row,nextTileIndex.column);
+            }
+        }
+    }
+
+    function isNeighboringTile(enemy,row,column) {
+        return Math.abs(enemy.row-row) <= 1 && Math.abs(enemy.column-column) <= 1
+    }
+
+    function moveEnemyToTileIndex(enemy,row,column) {
+        const enemyPostion = tilemap.tileIndexToPosition(row,column);
+        tilemap.changeEntityTileOccupation(enemy.row,enemy.column,row,column);
+        enemy.row = row;
+        enemy.column = column;
+        pendingAnimations++;
+        enemy.moveTo(enemyPostion.x,enemyPostion.y,enemy.walkSpeed);
+        entityContainer.changeVisualEntityOrder();
+    }
+
+    function enemyAnimationDone() {
+        pendingAnimations--;
+        if(pendingAnimations === 0) {
+            enemyManager.finishedTurn();
+        }
+    }
+
+    function enemyAtPosition(row,column) {
+        for(let i = 0; i < enemies.length; i++) {
+            if(enemies[i].enemy.row === row && enemies[i].enemy.column === column) {
+                return enemies[i];
+            }
+        }
+        return null;
+    }
+
+    function removeEnemy(enemy, id) {
+        removeEntityById(id);
+        tilemap.removeEntity(enemy.row,enemy.column);
+        enemies = enemies.filter((enemy) => enemy.id !== id);
+        entityContainer.changeVisualEntityOrder();
+    }
+
+    function clearEnemies() {
+        removeAllEntities();
+        enemyManager.pendingAnimations = 0;
+        for(let i = 0; i < enemies.length; i++) {
+            tilemap.removeEntity(enemies[i].row,enemies[i].column);
+        }
+        if(enemies.length > 0) {
+            enemies.length = 0;
+            entityContainer.changeVisualEntityOrder();
+        }
+    }
+}
+\endcode
+\br
+
+\section3 Limit Player Movement
+
+For the \c Player to be able to move more than one \c Tile at once, there can be no enemies.\br
+If there are, the \c Player is only allowed one step at a time.\br
+Therefore we need to extend the \c movePlayerTowards function.\br
+\c entities/PlayerManager.qml
+\code
+EntityManager {
+    id: playerManager
+
+    ...
+
+    property variant enemyManager
+
+    ...
+
+    function movePlayerTowards(row,column) { // returns {row, column} of next tile or null if not moving
+        if(enemyManager.enemies.length === 0) {
+            playerManager.movePlayerAlongPathTo(row,column);
+        } else {
+            const nextTileIndex = tilemap.nextStepOnPath({row: player.row, column: player.column},{row,column}, true);
+            if(nextTileIndex !== null && player !== undefined) {
+                playerManager.movePlayerToTileIndex(nextTileIndex.row,nextTileIndex.column);
+                playerManager.finishTurnAfterAnimation();
+                return nextTileIndex;
+            }
+            return null;
+        }
+    }
+
+    ...
+
+}
+\endcode
+\br
+
+\section3 Integration and Turns
+
+Now to connect everything we need to add the \c EnemyManager to the \c DungeonScene. \br
+To better handle the player and enemy action order, we will add a turn property.\br
+The order of the turns normally is:
+\list
+\li \c Paused, The game is waiting for user input
+\li \c Player, The player is currently taking their action
+\li \c Enemies, The enemies are currently taking their actions
+\endlist
+We also need to extend the \c createMap function with the spawing of enemies.
+Because we need to check if the \c Enemy has a valid path to the \c Player, which might be blocked by the lava,
+with many enemies it might take another calculation. \br
+\c scenes/DungeonScene.qml
+\code
+Scene {
+    id: dungeonScene
+
+    ...
+
+    property int turn: DungeonScene.Paused
+
+    enum Turn {
+        Player,
+        Enemies,
+        Paused
+    }
+
+    ...
+
+    Item {
+        ...
+        Tilemap {
+            ...
+            onClicked: (row,column) => {
+               if(dungeonScene.turn === DungeonScene.Paused) {
+                    dungeonScene.doPlayerActionToTile(row,column);
+                }
+            }
+            ...
+        }
+        ...
+        EnemyManager {
+            id: enemyManager
+            entityContainer: entityContainer
+            tilemap: tilemap
+            onFinishedTurn: dungeonScene.turn = DungeonScene.Paused;
+        }
+
+        PlayerManager {
+            ...
+            enemyManager: enemyManager
+            onFinishedTurn: dungeonScene.doActionsAfterPlayerTurn();
+            ...
+        }
+
+    }
+
+    function createMap() {
+        const rows = 11;
+        const columns = 7;
+
+        const playerTileIndex = {row: rows - 2,column: Math.floor(columns/2)};
+        const stairsTileIndex = {row: 1, column: playerTileIndex.column};
+
+        // try 20 times to get a valid setup
+        let successful = false;
+        for(let i = 0; i < 20; i++) {
+            enemyManager.clearEnemies();
+
+            tilemap.reshapeMap(rows, columns,playerTileIndex,stairsTileIndex);
+
+            playerManager.spawnPlayer(playerTileIndex.row,playerTileIndex.column);
+            if(!tilemap.isPathPossible(playerTileIndex,stairsTileIndex)) {
+                continue;
+            }
+
+            const enemiesSpawned = enemyManager.spawnEnemies(playerTileIndex);
+            if(!enemiesSpawned) {
+                continue;
+            }
+
+            successful = true;
+            break;
+        }
+
+        if(!successful) {
+            throw new Error("cannot create map");
+        }
+    }
+
+    function doPlayerActionToTile(row,column) {
+        dungeonScene.turn = DungeonScene.Player;
+        const playerTileIndex = playerManager.playerActionToTile(row,column);
+    }
+
+    function doActionsAfterPlayerTurn(playerTileIndex) {
+        dungeonScene.turn = DungeonScene.Enemies;
+        enemyManager.enemyActionsToTile(playerManager.player.row,playerManager.player.column);
+    }
+}
+\endcode
+\br
+
+\section3 How it looks
+
+\image Player_And_Enemy_On_Tilemap.png
+\br
