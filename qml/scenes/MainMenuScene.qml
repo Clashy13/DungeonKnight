@@ -9,15 +9,12 @@ Scene {
     id: mainMenuScene
     signal changeToDungeonScene()
 
-    Rectangle {
+    Image {
+        id: background
         anchors.fill: parent
-
-        Image {
-            anchors.fill: parent
-            source: "../../assets/dungeon_brickwall.png"
-            smooth: false
-            fillMode: Image.Tile
-        }
+        source: "../../assets/dungeon_brickwall.png"
+        smooth: false
+        fillMode: Image.Tile
     }
 
     ColumnLayout {
