@@ -1,4 +1,8 @@
-# DungeonKnight
+<p align="center">
+  <img src="assets/DungeonKnight_Icon.png" alt="DungeonKnight Logo" width="128">
+</p>
+
+<h1 align="center">DungeonKnight</h1>
 
 A pixel art dungeon crawler roguelike where you fight enemies in turn-based combat as you descend through dangerous dungeon levels.
 Along the way, you choose your own blessings and curses, shaping each run to your playstyle.
