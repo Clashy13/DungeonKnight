@@ -16,5 +16,4 @@ Button {
         border.width: 2
         border.color: menuButton.hovered ? "#606063" : "#404042"
     }
-    onClicked: changeToDungeonScene()
 }
