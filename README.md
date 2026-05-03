@@ -10,7 +10,7 @@ Along the way, you choose your own blessings and curses, shaping each run to you
 - self-selected buffs and debuffs
 - roguelike
 
-## Teck Stack
+## Tech Stack
 - Felgo / Qt Creator
 - Qt / QML (Javascript)
 - C++
