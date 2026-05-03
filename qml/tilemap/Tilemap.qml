@@ -94,15 +94,6 @@ Item {
         return Qt.point(x,y);
     }
 
-    function setEntityToRandomTileIndex() { // returns {row,column} of tile or null if no free tile found
-        const position = getRandomFreeTilePosition();
-        if(position === null) {
-            return null;
-        }
-        tiles[position.row][position.column].occupied = true;
-        return position;
-    }
-
     function changeEntityTileOccupation(currentRow,currentColumn,newRow,newColumn) {
         tiles[currentRow][currentColumn].occupied = false;
         tiles[newRow][newColumn].occupied = true;
