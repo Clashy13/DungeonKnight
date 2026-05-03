@@ -1,0 +1,171 @@
+\section1 Tilemap
+
+The \c Tilemap will be the board of our game. \br
+Its a grid-based layout with tiles.\br
+
+\section3 Tile
+
+For that we first create the \c Tile. \br
+\c tilemap/Tile.qml
+\quotefile Tile.qml
+\br
+
+There are 3 types of tiles:\br
+\list
+\li \c Stone, the default walkable tile
+\li \c Lava, an obstacle
+\li \c Stairs, they will lead you to the next dungeon level
+\endlist
+With each type comes a texture in the \c assets.
+A Tile can also be \c occupied by an entity which will be relevant later.\br
+
+\section3 Tilemap
+
+Now to create a map out of the tiles, you will need to create the \c Tilemap. \br
+It consists of a \c GridLayout which is created from the tiles-array which in turn is filled in the \c reshapeMap function.\br
+The tiles are ordered in \c rows and \c columns and need to receive these properties.\br
+\c tilemap/Tilemap.qml
+\code
+import QtQuick
+import QtQuick.Layouts
+import Felgo
+
+Item {
+    id: tilemap
+    property variant tiles: [] // 2d array of tiles forming rows and columns, value is {type: Tile.type, occupied: bool}
+    property int tileSize: width / columns
+    property int rows: 0
+    property int columns: 0
+    property variant stairsPosition
+    signal clicked(row: int,column: int);
+
+    GridLayout {
+        id: gridlayout
+        anchors.fill: parent
+        rows: tilemap.rows
+        columns: tilemap.columns
+        rowSpacing: 0
+        columnSpacing: 0
+
+        Repeater {
+            model: tilemap.rows*tilemap.columns
+            delegate: Tile {
+                type: {
+                    if(tiles[row] !== undefined && tiles[row][column] !== undefined)
+                        return tiles[row][column].type;
+                    else
+                        return Tile.Stone;
+                }
+                occupied:  {
+                    if(tiles[row] !== undefined && tiles[row][column] !== undefined)
+                        return tiles[row][column].occupied;
+                    else
+                        return false;
+                }
+                row: Math.floor(index / tilemap.columns) // get row from model index
+                column: index % tilemap.columns // get column from model index
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                onClicked: tilemap.clicked(row, column)
+            }
+        }
+    }
+
+    function reshapeMap(rows, columns, playerPosition, stairsPosition) {
+        tilemap.rows = rows;
+        tilemap.columns = columns;
+        tilemap.stairsPosition = stairsPosition;
+
+        const newTiles = [];
+        for(let row = 0; row < rows; row++) {
+            for(let col = 0; col < columns; col++) {
+                if(newTiles[row] === undefined) {
+                    newTiles[row] = [];
+                }
+                if(row === playerPosition.row && col === playerPosition.column) {
+                    newTiles[row][col] = {type: Tile.Stone, occupied: false};
+                } else if(row === stairsPosition.row && col === stairsPosition.column) {
+                    newTiles[row][col] = {type: Tile.Stairs, occupied: false};
+                } else {
+                    addNewRandomTile(newTiles,row,col);
+                }
+            }
+        }
+        tilemap.tiles = newTiles;
+    }
+
+    function addNewRandomTile(tiles, row, column) {
+        // chance of lava tiles appearing
+        const lavaChance = (column > 0 && tiles[row][column-1] === Tile.Lava) // if left tile is lava
+                         || (row > 0 && tiles[row-1][column] === Tile.Lava) // or if above tile is lava
+                         ? 0.4 // higher chance for lava appearing in cluster
+                         : 0.1; // lower change for lava
+        const type = Math.random() < lavaChance ? Tile.Lava : Tile.Stone;
+        tiles[row][column] = {type: type, occupied: false};
+    }
+}
+\endcode
+\br
+
+\section3 Integration
+
+Now we need to add the \c Tilemap to the \c DungeonScene. \br
+\c scenes/DungeonScene.qml
+\code
+...
+import "../tilemap"
+...
+Scene {
+    id: dungeonScene
+
+    ...
+
+    onVisibleChanged: {
+        if (visible) {
+            dungeonScene.createMap();
+        }
+    }
+
+    Rectangle {
+        id: background
+        ...
+    }
+
+    Item {
+        anchors.fill: parent
+        anchors.topMargin: 40
+        anchors.bottomMargin: 40
+        anchors.leftMargin: 10
+        anchors.rightMargin: 10
+
+        Tilemap {
+            id: tilemap
+            anchors.centerIn: parent
+
+            // keeps the tilemap in bounds regardless of the number of rows and columns
+            property real aspectRatio: columns / rows
+            width: Math.min(parent.width, parent.height * aspectRatio)
+            height: width / aspectRatio
+        }
+    }
+
+    function createMap() {
+        const rows = 11;
+        const columns = 7;
+
+        const playerTileIndex = {row: rows - 2,column: Math.floor(columns/2)};
+        const stairsTileIndex = {row: 1, column: playerTileIndex.column};
+
+        tilemap.reshapeMap(rows, columns,playerTileIndex,stairsTileIndex);
+    }
+}
+\endcode
+\br
+
+You need to add the \c Tilemap inside an \c Item with \c margins and to keep it in bounds for a better positioning.\br
+The \c Tilemap is then filled when the \c DungeonScene is shown.\br
+
+\section3 How it looks
+
+\image Tilemap.png
+\br

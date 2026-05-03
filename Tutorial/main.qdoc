@@ -1,0 +1,22 @@
+/*!
+    \page index.html
+    \title DungeonKnight Tutorial
+
+    \image DungeonKnight_Total.png
+    \br
+
+    \include Content/Introduction.qdoc
+    \include Content/Ressources.qdoc
+    \include Content/Project.qdoc
+    \include Content/Scenes.qdoc
+    \include Content/Tilemap.qdoc
+    \include Content/Player.qdoc
+    \include Content/Enemies.qdoc
+    \include Content/Combat.qdoc
+    \include Content/UI.qdoc
+    \include Content/Multiple_Levels.qdoc
+
+    With that, you have completed the tutorial and can now enjoy the game experience.
+
+    \include Content/End.qdoc
+*/

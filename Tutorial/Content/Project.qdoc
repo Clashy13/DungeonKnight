@@ -1,0 +1,6 @@
+\section1 The Project
+
+First, create a new empty Felgo project in Qt Creator.\br
+Once the project is set up, add all downloaded assets to the assets folder.\br
+
+You wont need to touch any files except the \c Main.qml and your new created qml files.\br
